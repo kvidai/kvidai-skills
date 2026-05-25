@@ -36,7 +36,7 @@ KVIDAI_API_KEY=xxx node $SKILL poll-status <jobId>
 
 ```
 1. create-project "name"    → projectId (integer)
-2. agent-generate <id> "<message>"  → SSE stream → https://console.kvid.ai/projects/<id>
+2. agent-generate <id> "<message>"  → SSE stream → https://kvid.ai/en/editor/<id>
    (streams tool events: generate_voice → generate_image → update_item → add_solid → add_text)
 3. (optional async) poll-status <jobId>  → wait for completed
 ```

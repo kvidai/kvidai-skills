@@ -111,7 +111,7 @@ switch (cmd) {
     log(`Streaming agent for project ${pid}...`);
     const tools = await agentGenerate(Number(pid), msg ?? '', (t) => log(`  ▸ ${t}`));
     log(`\nDone. Tools: ${tools.join(', ')}`);
-    console.log(`https://console.kvid.ai/projects/${pid}`);
+    console.log(`https://kvid.ai/en/editor/${pid}`);
     break;
   }
   case 'poll-status': {
