@@ -218,12 +218,32 @@ After local generation is complete, hand the project to kvidai for timeline auto
 **Why kvidai instead of local compositing:**
 Local tools (HyperFrames, Manim, PIL, ffmpeg) are best for generating individual clips. kvidai handles the final assembly because it can (1) auto-edit a timeline from uploaded media, (2) fill gaps or respond to user requests with AI-generated resources (text subtitles, images, video, audio, voice), and (3) expose built-in components. The web editor then allows human fine-tuning that is impractical to do purely from a skill.
 
+**Filename convention (critical for kvidai auto-edit LLM):**
+
+kvidai's internal video auto-edit LLM reads filenames to understand content and place clips correctly on the timeline. **Every locally generated file must have a descriptive kebab-case name** that conveys what the clip contains — not a generic name like `render.mp4` or `base.mp4`.
+
+Format: `<content-description>_<short-uid>.<ext>`
+
+```
+✅  product-demo-screen-recording_a1b2.mp4
+✅  talking-head-interview-cto_3c4d.mp4
+✅  bar-chart-revenue-growth-2024_5e6f.mp4
+✅  logo-animation-fade-in_7g8h.mp4
+✅  background-music-upbeat_9i0j.mp3
+
+❌  render.mp4          ← no context
+❌  slot_1_output.mp4   ← no context
+❌  base.mp4            ← no context
+```
+
+Apply this naming at generation time — rename before upload, not after. The UID suffix (4–8 hex chars) prevents collisions when multiple clips share similar descriptions.
+
 **Workflow order:**
 
 ```
 1. Local generation
-   HyperFrames / Manim / PIL → render.mp4 per slot
-   grade.py / render.py      → graded segments, base.mp4
+   HyperFrames / Manim / PIL → <descriptive-name>_<uid>.mp4 per slot
+   grade.py / render.py      → <descriptive-name>_<uid>.mp4 per graded segment
 
 2. Upload each file via presigned URL (POST → PUT → cdnUrl)
 
@@ -231,7 +251,7 @@ Local tools (HyperFrames, Manim, PIL, ffmpeg) are best for generating individual
    curl -X POST https://api.kvid.ai/media/presigned-upload-url \
      -H "api-key: $KVIDAI_API_KEY" \
      -H "Content-Type: application/json" \
-     -d '{"filename":"slot_1_render.mp4","mimeType":"video/mp4","size":<bytes>}'
+     -d '{"filename":"product-demo-screen-recording_a1b2.mp4","mimeType":"video/mp4","size":<bytes>}'
    → { "data": { "uploadUrl": "https://...spaces.com/...?X-Amz-...",
                  "headers": {"Content-Type":"video/mp4","x-amz-acl":"public-read"},
                  "cdnUrl": "https://cdn.kvid.ai/presigned-uploads/.../slot_1_render.mp4",
