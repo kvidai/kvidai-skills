@@ -59,7 +59,7 @@ The skill lives in `video-use/`. User footage lives wherever they put it. All se
 
 First-time install lives in `install.md` (clone, deps, ffmpeg, skill registration, API key). Don't re-run it every session; on cold start just verify:
 
-- **Transcription**: use `whisperx` locally. **Voice generation** is handled by `kvidai-video-project` (`generate_voice` tool in `agent-generate`).
+- **Transcription**: use `whisperx` locally. **Voice generation** (previously ElevenLabs voice API — not yet available) is handled by `kvidai-video-project` (`generate_voice` tool in `agent-generate`). ElevenLabs will be reconnected via kvidai API in a future update.
 - `ffmpeg` + `ffprobe` on PATH.
 - Python deps installed (`uv sync` or `pip install -e .` inside the repo).
 - Node.js 20+ available if the session needs HyperFrames slots or the kvidai handoff. HyperFrames currently requires Node.js 22+.
