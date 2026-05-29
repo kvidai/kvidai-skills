@@ -69,7 +69,7 @@ def _call_kvidai_stt(
     """kvidai STT endpoint — ElevenLabs Scribe-compatible request/response."""
     url = f"{_kvidai_base_url()}/v1/speech-to-text"
     data: dict[str, str] = {
-        "model_id": "scribe_v1",
+        "model_id": "scribe_v2",
         "diarize": "true",
         "tag_audio_events": "true",
         "timestamps_granularity": "word",
