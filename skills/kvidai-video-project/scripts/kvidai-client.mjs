@@ -79,7 +79,7 @@ export async function agentGenerate(projectId, message, onTool, options = {}) {
 
   const r = await fetch(`${BASE_URL}/agent/generate`, {
     ...fetchInit,
-    signal: AbortSignal.timeout(5 * 60 * 1000),
+    signal: AbortSignal.timeout(15 * 60 * 1000),
   });
   if (!r.ok || !r.body) throw new Error(`agentGenerate ${r.status}: ${await r.text()}`);
 
