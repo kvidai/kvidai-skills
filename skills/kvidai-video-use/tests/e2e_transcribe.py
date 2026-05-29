@@ -37,6 +37,15 @@ AGENT_BASE_URL  = os.environ.get("AGENT_BASE_URL",  "https://leescwebdev.loclx.i
 TEST_USER_EMAIL = os.environ.get("TEST_USER_EMAIL",  "user1@test.kvidai.local")
 TEST_APIM_KEY   = os.environ.get("TEST_APIM_KEY",    "ad5f47dfc94241a6993459ce6afb53d1")
 
+# APIM 경로 테스트용 (public APIM → Strapi).
+# 기본 경로: v1/speech-to-text-dev (loclx 라우팅 → localstrapi.loclx.io 로컬 Strapi).
+#   - prod 경로 테스트는 APIM_PATH=/v1/speech-to-text (→ console.kvid.ai) 로 override.
+# 키는 ai-api product 에 연결된 유효 구독 키 필요. 키가 401이면 SKIP.
+# ⚠️ APIM이 키 소유자 이메일을 주입(X-Kvidai-User-Email) → 그 이메일이 백엔드 DB에 크레딧 보유해야 STT 성공.
+APIM_BASE_URL = os.environ.get("APIM_BASE_URL", "https://api.kvid.ai")
+APIM_PATH     = os.environ.get("APIM_PATH", "/v1/speech-to-text-dev")
+APIM_KEY      = os.environ.get("APIM_KEY", TEST_APIM_KEY)
+
 DEFAULT_VIDEO = Path(
     "/home/ubuntu/code_workspace/kvidai-marketing-studio"
     "/campaigns/20260529_video_mabulshow"
@@ -46,14 +55,21 @@ VIDEO_PATH = Path(os.environ.get("VIDEO_PATH", str(DEFAULT_VIDEO)))
 
 PASS = "\033[32mPASS\033[0m"
 FAIL = "\033[31mFAIL\033[0m"
+SKIP = "\033[33mSKIP\033[0m"
 
 results: list[tuple[str, bool, str]] = []
+skipped: list[tuple[str, str]] = []
 
 
 def check(name: str, ok: bool, detail: str = "") -> None:
     results.append((name, ok, detail))
     status = PASS if ok else FAIL
     print(f"  [{status}] {name}" + (f"\n         {detail}" if detail and not ok else ""))
+
+
+def skip(name: str, reason: str = "") -> None:
+    skipped.append((name, reason))
+    print(f"  [{SKIP}] {name}" + (f" — {reason}" if reason else ""))
 
 
 def extract_audio(video: Path, dest: Path) -> None:
@@ -315,6 +331,65 @@ def test_agent_transcribe(cdn_url: str | None) -> None:
         check("Agent 호출", False, str(e))
 
 
+# ── Test 5: APIM 경로 — public APIM → Strapi (opt-in) ─────────────────────────
+
+def test_apim_stt() -> None:
+    """APIM public 엔드포인트로 직접 STT 호출 (transcribe.py 의 실제 경로).
+
+    유효한 APIM 구독 키가 필요. 키가 401(무효)이면 SKIP — 스위트 실패 아님.
+    ⚠️ APIM_BASE_URL 이 prod(api.kvid.ai)면 백엔드 Strapi 에서 실제 과금 발생.
+    """
+    print(f"\n[5] APIM 경로 — {APIM_BASE_URL}{APIM_PATH} (opt-in)")
+    if not VIDEO_PATH.exists():
+        skip("APIM STT", f"video not found: {VIDEO_PATH}")
+        return
+
+    with tempfile.TemporaryDirectory() as tmp:
+        audio = Path(tmp) / f"{VIDEO_PATH.stem}.wav"
+        try:
+            extract_audio(VIDEO_PATH, audio)
+        except Exception as e:
+            skip("APIM STT", f"ffmpeg 실패: {e}")
+            return
+
+        # 1) 무과금 probe — 키 유효성 먼저 확인 (file 없이 → 400 INPUT_REQUIRED 기대, 401이면 키 무효)
+        try:
+            probe = requests.post(
+                f"{APIM_BASE_URL}{APIM_PATH}",
+                headers={"api-key": APIM_KEY, "Content-Type": "application/json"},
+                json={}, timeout=25,
+            )
+        except Exception as e:
+            skip("APIM STT", f"APIM 연결 실패: {e}")
+            return
+
+        if probe.status_code == 401:
+            skip("APIM STT", "APIM 구독 키 무효(401) — 유효한 APIM_KEY 필요")
+            return
+        if probe.status_code in (0, 404):
+            skip("APIM STT", f"APIM 엔드포인트 미가용 ({probe.status_code})")
+            return
+
+        # 2) 키 유효 → 실제 multipart STT
+        try:
+            with open(audio, "rb") as f:
+                resp = requests.post(
+                    f"{APIM_BASE_URL}{APIM_PATH}",
+                    headers={"api-key": APIM_KEY},
+                    files={"file": (audio.name, f, "audio/wav")},
+                    data={"model_id": "scribe_v2", "timestamps_granularity": "word"},
+                    timeout=300,
+                )
+            check("APIM STT 응답 200", resp.status_code == 200,
+                  f"status={resp.status_code} body={resp.text[:200]}")
+            if resp.status_code == 200:
+                data = resp.json()
+                check("APIM STT words 존재", isinstance(data.get("words"), list) and len(data["words"]) > 0,
+                      f"words={len(data.get('words', []))}")
+        except Exception as e:
+            check("APIM STT 호출", False, str(e))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -330,18 +405,24 @@ def main() -> None:
     test_stt_direct()
     cdn_url, _ = test_media_upload()
     test_agent_transcribe(cdn_url)
+    test_apim_stt()
 
     # 결과 요약
     print("\n" + "=" * 60)
     total = len(results)
     passed = sum(1 for _, ok, _ in results if ok)
     failed = total - passed
-    print(f"결과: {passed}/{total} passed" + (f"  ({failed} failed)" if failed else ""))
+    skip_note = f"  ({len(skipped)} skipped)" if skipped else ""
+    print(f"결과: {passed}/{total} passed" + (f"  ({failed} failed)" if failed else "") + skip_note)
     if failed:
         print("\n실패 목록:")
         for name, ok, detail in results:
             if not ok:
                 print(f"  ❌ {name}" + (f": {detail}" if detail else ""))
+    if skipped:
+        print("\nSKIP 목록:")
+        for name, reason in skipped:
+            print(f"  ⏭️  {name}" + (f": {reason}" if reason else ""))
     print("=" * 60)
 
     sys.exit(0 if failed == 0 else 1)
