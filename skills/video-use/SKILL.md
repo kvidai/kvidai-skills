@@ -211,7 +211,79 @@ For HyperFrames slots, scaffold the slot inside `edit/animations/slot_<id>/` wit
 
 None is mandatory. Invent hybrids if useful (e.g., PIL background with a HyperFrames layer on top).
 
-**kvidai handoff (when the user wants GUI-editable final output):** When the user wants to finish the video in a web editor with manual fine-tuning, use the kvidai API instead of (or after) the local render pipeline. Call `node ../kvidai-video-project/scripts/kvidai-client.mjs` to create a project and stream the AI agent. The result is a URL (`https://kvid.ai/en/editor/<id>`) where the user can assemble the final timeline, add overlays, and fine-tune by hand. This path replaces `render.py` compositing — do not attempt to locally composite the kvidai output.
+## kvidai pipeline (final assembly)
+
+After local generation is complete, hand the project to kvidai for timeline auto-editing, AI media generation, and web-editor fine-tuning. This is the **final stage** of the video-use workflow — it replaces `render.py` compositing for the assembled output.
+
+**Why kvidai instead of local compositing:**
+Local tools (HyperFrames, Manim, PIL, ffmpeg) are best for generating individual clips. kvidai handles the final assembly because it can (1) auto-edit a timeline from uploaded media, (2) fill gaps or respond to user requests with AI-generated resources (text subtitles, images, video, audio, voice), and (3) expose built-in components. The web editor then allows human fine-tuning that is impractical to do purely from a skill.
+
+**Workflow order:**
+
+```
+1. Local generation
+   HyperFrames / Manim / PIL → render.mp4 per slot
+   grade.py / render.py      → graded segments, base.mp4
+
+2. Upload each file via presigned URL (POST → PUT → cdnUrl)
+
+   Step 2a — get presigned PUT URL:
+   curl -X POST https://api.kvid.ai/media/presigned-upload-url \
+     -H "api-key: $KVIDAI_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"filename":"slot_1_render.mp4","mimeType":"video/mp4","size":<bytes>}'
+   → { "data": { "uploadUrl": "https://...spaces.com/...?X-Amz-...",
+                 "headers": {"Content-Type":"video/mp4","x-amz-acl":"public-read"},
+                 "cdnUrl": "https://cdn.kvid.ai/presigned-uploads/.../slot_1_render.mp4",
+                 "expiresInSeconds": 1800 } }
+
+   Step 2b — PUT the file binary to uploadUrl:
+   curl -X PUT "$uploadUrl" \
+     -H "Content-Type: video/mp4" -H "x-amz-acl: public-read" \
+     --data-binary @edit/animations/slot_1/render.mp4
+   → HTTP 200
+
+   (repeat steps 2a–2b for each file: slot clips, base.mp4, etc.)
+
+3. Create kvidai project and register uploaded assets
+   node ../kvidai-video-project/scripts/kvidai-client.mjs create-project "My Video"
+   → projectId
+
+   node kvidai-client.mjs add-composition-asset <projectId> $KVIDAI_USER_EMAIL \
+     '{"id":"slot_1","type":"video","remoteUrl":"<cdnUrl from step 2a>"}'
+   (repeat for each uploaded file)
+
+4. Run kvidai AI agent — auto-edits timeline, fills gaps with AI-generated media
+   node kvidai-client.mjs agent-generate <projectId> \
+     "uploaded clips: slot_1 (intro animation 5s), base.mp4 (interview 87s). \
+      assemble final timeline. add captions. generate voice-over for intro."
+   → SSE stream: generate_voice → generate_image → update_item → add_solid → add_text
+   → https://kvid.ai/en/editor/<projectId>
+
+5. Human fine-tunes in web editor
+   Timing, text, transitions — all kvidai built-in components available.
+```
+
+**Presigned URL limits:** `size` > 200 MB → 413. URL expires in 1800s (30 min) — PUT within the window. `mimeType` in the presigned request must match the `Content-Type` header in the PUT.
+
+**Environment variables required:**
+```bash
+KVIDAI_API_KEY="<prod-contents-apim-key>"
+KVIDAI_USER_EMAIL="user@example.com"
+KVIDAI_BASE_URL="https://api.kvid.ai"  # default if unset
+```
+
+**Client script:** `../kvidai-video-project/scripts/kvidai-client.mjs` (Node.js 20+).
+See `../kvidai-video-project/SKILL.md` for the full API reference.
+
+**What kvidai AI agent generates on demand** (no local tool needed):
+- Text subtitles / captions (`add_text`)
+- Images (`generate_image`)
+- Voice-over / narration (`generate_voice`)
+- Video clips via generative AI (`update_item`)
+- Solid color / background elements (`add_solid`)
+
+Use local tools first — generate what you can with HyperFrames/Manim/PIL. Hand the rest to the kvidai agent as natural-language instructions in the `agent-generate` message.
 
 **Duration rules of thumb, context-dependent:**
 
