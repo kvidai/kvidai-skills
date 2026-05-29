@@ -31,6 +31,7 @@ These are the things where deviation produces silent failures or broken output. 
 10. **Parallel sub-agents for multiple animations.** Never sequential. Spawn N at once via the `Agent` tool; total wall time ≈ slowest one.
 11. **Strategy confirmation before execution.** Never touch the cut until the user has approved the plain-English plan.
 12. **All session outputs in `<videos_dir>/edit/`.** Never write inside the `video-use/` project directory.
+13. **Transcript files must be named `{videoStem}_transcribe.{json|srt|vtt}`.** The kvidai agent matches transcript to video by filename stem. Any other naming breaks 1:1 matching silently. Example: `interview_a1b2.mp4` → `interview_a1b2_transcribe.srt`. Plain `.md` / `.txt` (no timestamps) is NOT accepted by kvidai — run forced-alignment first to produce a timed format.
 
 Everything else in this document is a worked example. Deviate whenever the material calls for it.
 
@@ -273,16 +274,44 @@ Apply this naming at generation time — rename before upload, not after. The UI
      '{"id":"slot_1","type":"video","remoteUrl":"<cdnUrl from step 2a>"}'
    (repeat for each uploaded file)
 
-4. Run kvidai AI agent — auto-edits timeline, fills gaps with AI-generated media
+4. (Optional) Upload transcript files for subtitles — BEFORE agent-generate
+   # Step 4a: generate local transcript (if not already done)
+   python helpers/transcribe.py edit/interview_a1b2.mp4
+   # → edit/transcripts/interview_a1b2.json  (word-level, timed)
+
+   # Step 4b: convert to SRT (optional — kvidai accepts json/srt/vtt)
+   # (or use the json directly)
+
+   # Step 4c: rename to {videoStem}_transcribe.{ext}  ← CRITICAL (Hard Rule 13)
+   cp edit/transcripts/interview_a1b2.json edit/interview_a1b2_transcribe.json
+
+   # Step 4d: upload the transcript file via kvidai-client
+   node kvidai-client.mjs upload-assets $KVIDAI_USER_EMAIL edit/interview_a1b2_transcribe.json
+   # → [{ id: 42, url: "https://cdn.kvid.ai/.../interview_a1b2_transcribe.json", name: "interview_a1b2_transcribe.json" }]
+   TRANSCRIPT_URL="<url from above>"
+
+5. Run kvidai AI agent — pass transcript via --cdn-url for free subtitle generation
    node kvidai-client.mjs agent-generate <projectId> \
-     "uploaded clips: slot_1 (intro animation 5s), base.mp4 (interview 87s). \
-      assemble final timeline. add captions. generate voice-over for intro."
-   → SSE stream: generate_voice → generate_image → update_item → add_solid → add_text
+     "interview_a1b2.mp4 영상에 자막 넣어줘." \
+     --cdn-url "$TRANSCRIPT_URL" --filename interview_a1b2_transcribe.json --mime application/json
+   # Agent detects {stem}_transcribe.json, calls add_subtitles_from_transcript — no STT charge.
+   # Without transcript: omit --cdn-url; agent will notify that no transcript is available (Phase 2: auto-STT).
+   → SSE stream: add_subtitles_from_transcript → ...
    → https://kvid.ai/en/editor/<projectId>
 
-5. Human fine-tunes in web editor
+   # Web editor alternative: attach the transcript file directly in the chat panel
+   # "interview_a1b2.mp4 영상에 자막 넣어줘" + attach interview_a1b2_transcribe.srt → same result
+
+6. Human fine-tunes in web editor
    Timing, text, transitions — all kvidai built-in components available.
 ```
+
+**Transcript upload notes:**
+- Transcript files are small text — upload via `kvidai-client.mjs upload-assets` (no presigned URL needed).
+- Supported formats: `.json` (faster-whisper / ElevenLabs Scribe word-level), `.srt`, `.vtt`. NOT `.md`/`.txt` (no timestamps).
+- The agent matches transcript → video by stem: `interview_a1b2_transcribe.json` ↔ `interview_a1b2.mp4`.
+- Subtitles are free (no STT charge) when a transcript file is provided.
+- Second-edit sessions: transcript is cached in the composition — no re-upload needed.
 
 **Presigned URL limits:** `size` > 200 MB → 413. URL expires in 1800s (30 min) — PUT within the window. `mimeType` in the presigned request must match the `Content-Type` header in the PUT.
 
