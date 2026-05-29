@@ -295,7 +295,9 @@ Apply this naming at generation time — rename before upload, not after. The UI
      "interview_a1b2.mp4 영상에 자막 넣어줘." \
      --cdn-url "$TRANSCRIPT_URL" --filename interview_a1b2_transcribe.json --mime application/json
    # Agent detects {stem}_transcribe.json, calls add_subtitles_from_transcript — no STT charge.
-   # Without transcript: omit --cdn-url; agent will notify that no transcript is available (Phase 2: auto-STT).
+   # Without transcript: omit --cdn-url; the cloud agent automatically calls generate_transcript
+   # (ElevenLabs Scribe via api.kvid.ai/v1/speech-to-text) and charges credits.
+   # To skip auto-STT, say "transcribe 하지 마" or "skip STT" in the agent prompt.
    → SSE stream: add_subtitles_from_transcript → ...
    → https://kvid.ai/en/editor/<projectId>
 
@@ -311,6 +313,8 @@ Apply this naming at generation time — rename before upload, not after. The UI
 - Supported formats: `.json` (faster-whisper / ElevenLabs Scribe word-level), `.srt`, `.vtt`. NOT `.md`/`.txt` (no timestamps).
 - The agent matches transcript → video by stem: `interview_a1b2_transcribe.json` ↔ `interview_a1b2.mp4`.
 - Subtitles are free (no STT charge) when a transcript file is provided.
+- No transcript provided: cloud agent calls `generate_transcript` → ElevenLabs Scribe STT via `api.kvid.ai/v1/speech-to-text`, credits charged per audio minute. Re-edits reuse the stored transcript at no additional cost.
+- `transcribe.py` uses `api.kvid.ai/v1/speech-to-text` as the default backend (when `KVIDAI_API_KEY` is set).
 - Second-edit sessions: transcript is cached in the composition — no re-upload needed.
 
 **Presigned URL limits:** `size` > 200 MB → 413. URL expires in 1800s (30 min) — PUT within the window. `mimeType` in the presigned request must match the `Content-Type` header in the PUT.
