@@ -1,21 +1,20 @@
 """
 E2E test — transcribe 기능 (STT + agent subtitle flow)
 
-테스트 환경:
-  Strapi   : development.env (ELEVENLABS_API_KEY 있음, 로컬 DB)
-  loclx    : localstrapi.loclx.io → localhost:1337
-             leescwebdev.loclx.io → localhost:3000
-
 실행:
-  cd /home/ubuntu/code_workspace/kvidai
-  python skills/kvidai-skills/skills/kvidai-video-use/tests/e2e_transcribe.py
+  export KVIDAI_API_URL=https://localstrapi.loclx.io
+  export AGENT_BASE_URL=http://localhost:3000
+  export KVIDAI_API_KEY=<your-api-key>
+  export VIDEO_PATH=/path/to/video.mp4
+  python skills/kvidai-video-use/tests/e2e_transcribe.py
 
-환경변수 (필수 또는 기본값):
-  STRAPI_BASE_URL  : https://localstrapi.loclx.io  (기본값)
-  AGENT_BASE_URL   : 필수 — 로컬 agent 서버 URL (예: http://localhost:3000)
-  TEST_USER_EMAIL  : user1@test.kvidai.local  (기본값)
-  TEST_APIM_KEY    : 필수 — .env 파일에서 설정
-  VIDEO_PATH       : 필수 — 테스트할 영상 경로
+환경변수:
+  KVIDAI_API_URL   : kvidai API base URL  (기본값: https://localstrapi.loclx.io)
+  AGENT_BASE_URL   : 로컬 agent 서버 URL  (기본값: http://localhost:3000)
+  TEST_USER_EMAIL  : 테스트 유저 이메일   (기본값: user1@test.kvidai.local)
+  KVIDAI_API_KEY   : API 키               (필수 — .env 파일에서 설정)
+  VIDEO_PATH       : 테스트할 영상 경로   (필수)
+  KVIDAI_STT_PATH  : STT API 경로         (기본값: /v1/speech-to-text-dev)
 """
 
 from __future__ import annotations
@@ -32,19 +31,16 @@ import requests
 
 # ── 설정 ──────────────────────────────────────────────────────────────────────
 
-STRAPI_BASE_URL = os.environ.get("STRAPI_BASE_URL", "https://localstrapi.loclx.io")
-AGENT_BASE_URL  = os.environ.get("AGENT_BASE_URL",  "")
+KVIDAI_API_URL  = os.environ.get("KVIDAI_API_URL",  "https://localstrapi.loclx.io")
+AGENT_BASE_URL  = os.environ.get("AGENT_BASE_URL",  "http://localhost:3000")
 TEST_USER_EMAIL = os.environ.get("TEST_USER_EMAIL",  "user1@test.kvidai.local")
-TEST_APIM_KEY   = os.environ.get("TEST_APIM_KEY",    "")
+KVIDAI_API_KEY  = os.environ.get("KVIDAI_API_KEY",  "")
 
-# APIM 경로 테스트용 (public APIM → Strapi).
-# 기본 경로: v1/speech-to-text-dev (loclx 라우팅 → localstrapi.loclx.io 로컬 Strapi).
-#   - prod 경로 테스트는 APIM_PATH=/v1/speech-to-text (→ console.kvid.ai) 로 override.
-# 키는 ai-api product 에 연결된 유효 구독 키 필요. 키가 401이면 SKIP.
-# ⚠️ APIM이 키 소유자 이메일을 주입(X-Kvidai-User-Email) → 그 이메일이 백엔드 DB에 크레딧 보유해야 STT 성공.
-APIM_BASE_URL = os.environ.get("APIM_BASE_URL", "https://api.kvid.ai")
-APIM_PATH     = os.environ.get("APIM_PATH", "/v1/speech-to-text-dev")
-APIM_KEY      = os.environ.get("APIM_KEY", TEST_APIM_KEY)
+# API 키 인증 STT 경로 테스트용 (opt-in).
+# 기본 경로: v1/speech-to-text-dev
+# prod 경로 테스트: KVIDAI_STT_PATH=/v1/speech-to-text
+# ⚠️ prod URL 사용 시 실제 과금 발생
+KVIDAI_STT_PATH = os.environ.get("KVIDAI_STT_PATH", "/v1/speech-to-text-dev")
 
 VIDEO_PATH = Path(os.environ.get("VIDEO_PATH", ""))
 
@@ -76,21 +72,21 @@ def extract_audio(video: Path, dest: Path) -> None:
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-# ── Test 1: Strapi health ─────────────────────────────────────────────────────
+# ── Test 1: API health ────────────────────────────────────────────────────────
 
-def test_strapi_health() -> None:
-    print("\n[1] Strapi health check")
+def test_api_health() -> None:
+    print("\n[1] API health check")
     try:
-        r = requests.get(f"{STRAPI_BASE_URL}/_health", timeout=10)
-        check("Strapi 응답", r.status_code in (200, 204), f"status={r.status_code}")
+        r = requests.get(f"{KVIDAI_API_URL}/_health", timeout=10)
+        check("API 응답", r.status_code in (200, 204), f"status={r.status_code}")
     except Exception as e:
-        check("Strapi 응답", False, str(e))
+        check("API 응답", False, str(e))
 
 
-# ── Test 2: 직접 STT 호출 (APIM 우회) ────────────────────────────────────────
+# ── Test 2: 직접 STT 호출 ─────────────────────────────────────────────────────
 
 def test_stt_direct() -> None:
-    print("\n[2] Strapi /api/speech-to-text 직접 호출 (loclx 경유)")
+    print("\n[2] /api/speech-to-text 직접 호출")
     if not VIDEO_PATH.exists():
         check("비디오 파일 존재", False, f"not found: {VIDEO_PATH}")
         return
@@ -110,7 +106,7 @@ def test_stt_direct() -> None:
         try:
             with open(audio, "rb") as f:
                 resp = requests.post(
-                    f"{STRAPI_BASE_URL}/api/speech-to-text",
+                    f"{KVIDAI_API_URL}/api/speech-to-text",
                     files={"file": (audio.name, f, "audio/wav")},
                     data={
                         "email": TEST_USER_EMAIL,
@@ -157,7 +153,7 @@ def test_media_upload() -> tuple[str | None, int | None]:
     try:
         with open(VIDEO_PATH, "rb") as f:
             resp = requests.post(
-                f"{STRAPI_BASE_URL}/api/media-management/upload",
+                f"{KVIDAI_API_URL}/api/media-management/upload",
                 files={"files": (VIDEO_PATH.name, f, "video/mp4")},
                 data={"email": TEST_USER_EMAIL},
                 timeout=120,
@@ -192,7 +188,7 @@ def test_agent_transcribe(cdn_url: str | None) -> None:
     # 프로젝트 생성
     try:
         r = requests.post(
-            f"{STRAPI_BASE_URL}/api/video-project",
+            f"{KVIDAI_API_URL}/api/video-project",
             json={"name": "E2E Transcribe Test", "email": TEST_USER_EMAIL},
             headers={"Content-Type": "application/json"},
             timeout=30,
@@ -217,7 +213,7 @@ def test_agent_transcribe(cdn_url: str | None) -> None:
     composition = None
     try:
         pr = requests.get(
-            f"{STRAPI_BASE_URL}/api/video-project/{project_id}",
+            f"{KVIDAI_API_URL}/api/video-project/{project_id}",
             params={"email": TEST_USER_EMAIL},
             timeout=10,
         )
@@ -231,7 +227,7 @@ def test_agent_transcribe(cdn_url: str | None) -> None:
     body: dict = {
         "projectId": project_id,
         "email": TEST_USER_EMAIL,
-        "apiKey": TEST_APIM_KEY,
+        "apiKey": KVIDAI_API_KEY,
         "message": message,
         "chatHistory": [],
         "composition": composition or {"fps": 30, "items": {}, "assets": {}, "tracks": [], "durationInFrames": 300, "compositionWidth": 1080, "compositionHeight": 1920},
@@ -292,7 +288,7 @@ def test_agent_transcribe(cdn_url: str | None) -> None:
         for _ in range(5):
             time.sleep(2)  # autoSave 반영 대기
             pr = requests.get(
-                f"{STRAPI_BASE_URL}/api/video-project/{project_id}",
+                f"{KVIDAI_API_URL}/api/video-project/{project_id}",
                 params={"email": TEST_USER_EMAIL},
                 timeout=10,
             )
@@ -326,17 +322,17 @@ def test_agent_transcribe(cdn_url: str | None) -> None:
         check("Agent 호출", False, str(e))
 
 
-# ── Test 5: APIM 경로 — public APIM → Strapi (opt-in) ─────────────────────────
+# ── Test 5: API 키 인증 STT 경로 (opt-in) ────────────────────────────────────
 
-def test_apim_stt() -> None:
-    """APIM public 엔드포인트로 직접 STT 호출 (transcribe.py 의 실제 경로).
+def test_api_stt() -> None:
+    """API 키 인증 STT 엔드포인트 직접 호출 (transcribe.py 의 실제 경로).
 
-    유효한 APIM 구독 키가 필요. 키가 401(무효)이면 SKIP — 스위트 실패 아님.
-    ⚠️ APIM_BASE_URL 이 prod(api.kvid.ai)면 백엔드 Strapi 에서 실제 과금 발생.
+    KVIDAI_API_KEY 미설정 시 SKIP — 스위트 실패 아님.
+    ⚠️ prod 경로(/v1/speech-to-text) 사용 시 실제 과금 발생.
     """
-    print(f"\n[5] APIM 경로 — {APIM_BASE_URL}{APIM_PATH} (opt-in)")
+    print(f"\n[5] API 키 인증 STT — {KVIDAI_API_URL}{KVIDAI_STT_PATH} (opt-in)")
     if not VIDEO_PATH.exists():
-        skip("APIM STT", f"video not found: {VIDEO_PATH}")
+        skip("API STT", f"video not found: {VIDEO_PATH}")
         return
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -344,45 +340,45 @@ def test_apim_stt() -> None:
         try:
             extract_audio(VIDEO_PATH, audio)
         except Exception as e:
-            skip("APIM STT", f"ffmpeg 실패: {e}")
+            skip("API STT", f"ffmpeg 실패: {e}")
             return
 
-        # 1) 무과금 probe — 키 유효성 먼저 확인 (file 없이 → 400 INPUT_REQUIRED 기대, 401이면 키 무효)
+        # 1) 키 유효성 probe (file 없이 → 400 INPUT_REQUIRED 기대, 401이면 키 무효)
         try:
             probe = requests.post(
-                f"{APIM_BASE_URL}{APIM_PATH}",
-                headers={"api-key": APIM_KEY, "Content-Type": "application/json"},
+                f"{KVIDAI_API_URL}{KVIDAI_STT_PATH}",
+                headers={"api-key": KVIDAI_API_KEY, "Content-Type": "application/json"},
                 json={}, timeout=25,
             )
         except Exception as e:
-            skip("APIM STT", f"APIM 연결 실패: {e}")
+            skip("API STT", f"연결 실패: {e}")
             return
 
         if probe.status_code == 401:
-            skip("APIM STT", "APIM 구독 키 무효(401) — 유효한 APIM_KEY 필요")
+            skip("API STT", "API 키 무효(401) — 유효한 KVIDAI_API_KEY 필요")
             return
         if probe.status_code in (0, 404):
-            skip("APIM STT", f"APIM 엔드포인트 미가용 ({probe.status_code})")
+            skip("API STT", f"엔드포인트 미가용 ({probe.status_code})")
             return
 
         # 2) 키 유효 → 실제 multipart STT
         try:
             with open(audio, "rb") as f:
                 resp = requests.post(
-                    f"{APIM_BASE_URL}{APIM_PATH}",
-                    headers={"api-key": APIM_KEY},
+                    f"{KVIDAI_API_URL}{KVIDAI_STT_PATH}",
+                    headers={"api-key": KVIDAI_API_KEY},
                     files={"file": (audio.name, f, "audio/wav")},
                     data={"model_id": "scribe_v2", "timestamps_granularity": "word"},
                     timeout=300,
                 )
-            check("APIM STT 응답 200", resp.status_code == 200,
+            check("API STT 응답 200", resp.status_code == 200,
                   f"status={resp.status_code} body={resp.text[:200]}")
             if resp.status_code == 200:
                 data = resp.json()
-                check("APIM STT words 존재", isinstance(data.get("words"), list) and len(data["words"]) > 0,
+                check("API STT words 존재", isinstance(data.get("words"), list) and len(data["words"]) > 0,
                       f"words={len(data.get('words', []))}")
         except Exception as e:
-            check("APIM STT 호출", False, str(e))
+            check("API STT 호출", False, str(e))
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
@@ -390,17 +386,17 @@ def test_apim_stt() -> None:
 def main() -> None:
     print("=" * 60)
     print("E2E: kvidai-video-use transcribe 기능 테스트")
-    print(f"  Strapi : {STRAPI_BASE_URL}")
+    print(f"  API    : {KVIDAI_API_URL}")
     print(f"  Agent  : {AGENT_BASE_URL}")
     print(f"  Email  : {TEST_USER_EMAIL}")
-    print(f"  Video  : {VIDEO_PATH.name}")
+    print(f"  Video  : {VIDEO_PATH.name if VIDEO_PATH.name else '(not set)'}")
     print("=" * 60)
 
-    test_strapi_health()
+    test_api_health()
     test_stt_direct()
     cdn_url, _ = test_media_upload()
     test_agent_transcribe(cdn_url)
-    test_apim_stt()
+    test_api_stt()
 
     # 결과 요약
     print("\n" + "=" * 60)
