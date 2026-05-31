@@ -10,12 +10,12 @@ E2E test — transcribe 기능 (STT + agent subtitle flow)
   cd /home/ubuntu/code_workspace/kvidai
   python skills/kvidai-skills/skills/kvidai-video-use/tests/e2e_transcribe.py
 
-환경변수 (기본값 내장 — development.env 기반):
-  STRAPI_BASE_URL  : https://localstrapi.loclx.io
-  AGENT_BASE_URL   : https://leescwebdev.loclx.io
-  TEST_USER_EMAIL  : user1@test.kvidai.local
-  TEST_APIM_KEY    : ad5f47dfc94241a6993459ce6afb53d1
-  VIDEO_PATH       : (아래 DEFAULT_VIDEO 사용)
+환경변수 (필수 또는 기본값):
+  STRAPI_BASE_URL  : https://localstrapi.loclx.io  (기본값)
+  AGENT_BASE_URL   : 필수 — 로컬 agent 서버 URL (예: http://localhost:3000)
+  TEST_USER_EMAIL  : user1@test.kvidai.local  (기본값)
+  TEST_APIM_KEY    : 필수 — .env 파일에서 설정
+  VIDEO_PATH       : 필수 — 테스트할 영상 경로
 """
 
 from __future__ import annotations
@@ -33,9 +33,9 @@ import requests
 # ── 설정 ──────────────────────────────────────────────────────────────────────
 
 STRAPI_BASE_URL = os.environ.get("STRAPI_BASE_URL", "https://localstrapi.loclx.io")
-AGENT_BASE_URL  = os.environ.get("AGENT_BASE_URL",  "https://leescwebdev.loclx.io")
+AGENT_BASE_URL  = os.environ.get("AGENT_BASE_URL",  "")
 TEST_USER_EMAIL = os.environ.get("TEST_USER_EMAIL",  "user1@test.kvidai.local")
-TEST_APIM_KEY   = os.environ.get("TEST_APIM_KEY",    "ad5f47dfc94241a6993459ce6afb53d1")
+TEST_APIM_KEY   = os.environ.get("TEST_APIM_KEY",    "")
 
 # APIM 경로 테스트용 (public APIM → Strapi).
 # 기본 경로: v1/speech-to-text-dev (loclx 라우팅 → localstrapi.loclx.io 로컬 Strapi).
@@ -46,12 +46,7 @@ APIM_BASE_URL = os.environ.get("APIM_BASE_URL", "https://api.kvid.ai")
 APIM_PATH     = os.environ.get("APIM_PATH", "/v1/speech-to-text-dev")
 APIM_KEY      = os.environ.get("APIM_KEY", TEST_APIM_KEY)
 
-DEFAULT_VIDEO = Path(
-    "/home/ubuntu/code_workspace/kvidai-marketing-studio"
-    "/campaigns/20260529_video_mabulshow"
-    "/매불쇼youtube20260528_seg_01_main.mp4"
-)
-VIDEO_PATH = Path(os.environ.get("VIDEO_PATH", str(DEFAULT_VIDEO)))
+VIDEO_PATH = Path(os.environ.get("VIDEO_PATH", ""))
 
 PASS = "\033[32mPASS\033[0m"
 FAIL = "\033[31mFAIL\033[0m"
