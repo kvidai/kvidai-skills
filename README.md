@@ -11,6 +11,16 @@ Agent skills for the kvidai video platform — works with Claude Code, Codex, Go
 | [`kvidai-preset`](skills/kvidai-preset/) | Create, list, update, delete presets |
 | [`kvidai-video-use`](skills/kvidai-video-use/) | Conversation-driven video editor: transcribe, cut, grade, subtitle, composite |
 
+## When to use this vs the kvidai CLI
+
+| Situation | Use |
+|---|---|
+| Manage video projects, presets, media — or edit video by conversation — **any agent, no CLI needed** | **kvidai-skills** (this repo) |
+| Generate images/video/audio with a kvid.ai model, **kvidai CLI installed locally** | [kvidai CLI](https://github.com/kvidai/kvidai-cli) bundled skills (`kvidai init`) |
+
+These skills call `api.kvid.ai` directly via Node.js — the kvidai CLI binary is **not required**.
+The kvidai CLI bundled skills teach agents how to call CLI commands and require the binary to be present on the same machine.
+
 ## Installation
 
 ### Option 1 — npx skills (recommended)
@@ -42,5 +52,5 @@ git submodule add https://github.com/epicmobile18/kvidai-skills skills/kvidai-sk
 ```bash
 export KVIDAI_API_KEY="<your-api-key>"
 export KVIDAI_BASE_URL="https://api.kvid.ai"  # default if not set
-export KVIDAI_USER_EMAIL="user@example.com"   # required for media upload
+export KVIDAI_USER_EMAIL="user@example.com"   # optional; used by some media upload APIs
 ```
