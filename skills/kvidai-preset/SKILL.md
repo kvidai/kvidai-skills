@@ -16,7 +16,7 @@ All paths below are relative to the **kvidai monorepo root**.
 | Field | Meaning |
 |-------|---------|
 | `presetId` | Human-friendly external identifier (e.g. `review-owl`, `system_default`). Used by clients in URLs and agent body. Unique. |
-| `isDefault` | Admin-only flag. Exactly one preset per locale should be marked default — that's what `templateId=null` projects fall back to. |
+| `isDefault` | When true, this preset is the system fallback for new projects with no template specified. Exactly one preset per locale should be marked as the default. |
 | `isPublic` | Owner can publish a preset so other users can pick it from the storyboard "preset" dropdown. |
 | `email` | Owner. Regular users only see their own + `isPublic` + `isDefault` rows. |
 | `thumbnailUrl` | Optional preview image shown in the preset picker. |
@@ -28,7 +28,7 @@ All paths below are relative to the **kvidai monorepo root**.
 ```bash
 export KVIDAI_API_KEY="<prod-preset-apim-key>"          # APIM subscription key, scope = preset product
 export KVIDAI_BASE_URL="https://api.kvid.ai"            # default if not set; use https://staging-api.kvid.ai for staging
-export KVIDAI_USER_EMAIL="user@example.com"             # forwarded as X-Kvidai-User-Email (set automatically by APIM if you trust APIM auth)
+export KVIDAI_USER_EMAIL="user@example.com"             # required for some operations; scoped automatically from the APIM subscription key
 ```
 
 ## Run (agent path)
@@ -36,7 +36,7 @@ export KVIDAI_USER_EMAIL="user@example.com"             # forwarded as X-Kvidai-
 ```bash
 SKILL=.claude/skills/kvidai-preset/scripts/kvidai-preset-client.mjs
 
-# List presets the caller can see (own + isPublic + isDefault — or everything if admin)
+# List presets the caller can see (own + isPublic + isDefault)
 node $SKILL list
 
 # Get a single preset by numeric id
@@ -60,16 +60,16 @@ node $SKILL delete 42
 
 ## Authorization model
 
-The API is **public-routed** on the Strapi side; APIM handles auth and injects `X-Kvidai-User-Email` based on the subscription key's owner. So as a script author you only carry the APIM key — the email follows from it.
+Auth is handled by the APIM subscription key — just carry the `KVIDAI_API_KEY`. The API auto-scopes each operation to the subscription's owner.
 
-| Operation | Regular user | Admin (super_admin / admin role) |
-|-----------|--------------|----------------------------------|
-| List | own + isPublic + isDefault | all |
-| Get / GetByPresetId | own + isPublic + isDefault | all |
-| Create | owner forced to caller; `isDefault` forced false | `isDefault` honored as posted |
-| Update | owner only; `isDefault` ignored | full |
-| Delete | owner only | full |
-| Duplicate | clone source visible to caller → owns the copy; `isDefault`/`isPublic` reset to false | same |
+| Operation | What you can access |
+|-----------|---------------------|
+| List | Your own presets + any `isPublic` presets + the system `isDefault` preset |
+| Get / GetByPresetId | Your own + `isPublic` + `isDefault` |
+| Create | Owned by you; `isDefault` is always set to false |
+| Update | Your own presets only |
+| Delete | Your own presets only |
+| Duplicate | Any preset visible to you → you own the copy; `isDefault`/`isPublic` reset to false |
 
 ## Picking a preset for a new video project
 

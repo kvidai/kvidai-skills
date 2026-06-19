@@ -2,16 +2,16 @@
 E2E test — transcribe 기능 (STT + agent subtitle flow)
 
 실행:
-  export KVIDAI_API_URL=https://localstrapi.loclx.io
+  export KVIDAI_API_URL=https://api.kvid.ai
   export AGENT_BASE_URL=http://localhost:3000
   export KVIDAI_API_KEY=<your-api-key>
   export VIDEO_PATH=/path/to/video.mp4
   python skills/kvidai-video-use/tests/e2e_transcribe.py
 
 환경변수:
-  KVIDAI_API_URL   : kvidai API base URL  (기본값: https://localstrapi.loclx.io)
+  KVIDAI_API_URL   : kvidai API base URL  (기본값: https://api.kvid.ai)
   AGENT_BASE_URL   : 로컬 agent 서버 URL  (기본값: http://localhost:3000)
-  TEST_USER_EMAIL  : 테스트 유저 이메일   (기본값: user1@test.kvidai.local)
+  TEST_USER_EMAIL  : 테스트 유저 이메일   (기본값: user@example.com)
   KVIDAI_API_KEY   : API 키               (필수 — .env 파일에서 설정)
   VIDEO_PATH       : 테스트할 영상 경로   (필수)
   KVIDAI_STT_PATH  : STT API 경로         (기본값: /v1/speech-to-text-dev)
@@ -31,9 +31,9 @@ import requests
 
 # ── 설정 ──────────────────────────────────────────────────────────────────────
 
-KVIDAI_API_URL  = os.environ.get("KVIDAI_API_URL",  "https://localstrapi.loclx.io")
+KVIDAI_API_URL  = os.environ.get("KVIDAI_API_URL",  "https://api.kvid.ai")
 AGENT_BASE_URL  = os.environ.get("AGENT_BASE_URL",  "http://localhost:3000")
-TEST_USER_EMAIL = os.environ.get("TEST_USER_EMAIL",  "user1@test.kvidai.local")
+TEST_USER_EMAIL = os.environ.get("TEST_USER_EMAIL",  "user@example.com")
 KVIDAI_API_KEY  = os.environ.get("KVIDAI_API_KEY",  "")
 
 # API 키 인증 STT 경로 테스트용 (opt-in).

@@ -13,7 +13,6 @@ All paths below are relative to the **kvidai monorepo root**.
 export KVIDAI_API_KEY="<prod-contents-apim-key>"
 export KVIDAI_BASE_URL="https://api.kvid.ai" # default if not set
 export KVIDAI_USER_EMAIL="user@example.com"  # required for asset upload
-export STRAPI_TOKEN="<strapi-api-token>"     # optional — only for media field attach
 ```
 
 ## Run (agent path)
@@ -45,8 +44,6 @@ KVIDAI_API_KEY=xxx node $SKILL upload-assets user@example.com brief.md reference
 KVIDAI_API_KEY=xxx node $SKILL add-composition-asset 260 user@example.com \
   '{"id":"asset_ref1","type":"image","remoteUrl":"https://cdn.example.com/reference.jpg"}'
 
-# (Optional) Attach file IDs to project media library (requires STRAPI_TOKEN)
-KVIDAI_API_KEY=xxx STRAPI_TOKEN=xxx node $SKILL attach-media 260 42 43 44
 ```
 
 ## Core workflow
@@ -77,8 +74,7 @@ KVIDAI_API_KEY=xxx STRAPI_TOKEN=xxx node $SKILL attach-media 260 42 43 44
 2. upload-assets <email> file1 file2 file3      → [{ id, url, name }, ...]
 3. add-composition-asset <id> <email> <asset>   → adds remoteUrl to composition.assets
    (repeat for each file; agent references these assets on the timeline)
-4. (optional) attach-media <id> fileId...       → links to project media library (STRAPI_TOKEN required)
-5. agent-generate <id> "<describe use of assets>"  → SSE stream
+4. agent-generate <id> "<describe use of assets>"  → SSE stream
 ```
 
 **End-to-end example (Option B)**: see `scripts/examples/with-assets/run.mjs`
@@ -179,19 +175,6 @@ fields:
 → { success: true, data: [{ id, url, name, mime, size }, ...] }
 ```
 
-**Alternative (Strapi standard — upload + attach in one call, requires Bearer JWT)**
-
-```
-POST {KVIDAI_BASE_URL}/api/upload?ref=api::video-project.video-project&refId={projectId}&field=media
-Authorization: Bearer {STRAPI_TOKEN}
-Content-Type: multipart/form-data
-
-fields:
-  files: <binary file>
-
-→ [{ id, url, name, ... }]   (file auto-linked to project.media)
-```
-
 **Add asset to composition timeline**
 
 ```
@@ -202,15 +185,6 @@ api-key: {KVIDAI_API_KEY}
   "data": { "asset": { "id": "asset_ref1", "type": "image", "remoteUrl": "https://cdn.example.com/img.jpg" } } }
 
 → { data: { composition: { assets: { "asset_ref1": { ... } } } } }
-```
-
-**Attach files to project media library** (optional archive — requires STRAPI_TOKEN)
-
-```
-PUT {KVIDAI_BASE_URL}/api/video-projects/{id}
-api-key: {KVIDAI_API_KEY}
-Authorization: Bearer {STRAPI_TOKEN}
-{ "data": { "media": [fileId1, fileId2] } }
 ```
 
 ## Import in JavaScript (ESM)
@@ -233,7 +207,6 @@ For marketing-studio: use `@marketing-studio/send-video-kvidai` (wraps the same 
 - **Async t2v endpoint** unreachable from this dev container (HTTP 000). Works from production environments.
 - **`/video-project/create` is JSON-only** — cannot include files in the create call. Upload is always a separate step.
 - **`uploadAssets` needs a registered user email** — the email must exist in Strapi DB. Upload will 404 if not found.
-- **`attachMediaToProject` needs STRAPI_TOKEN** — the `api-key` header alone cannot write to the Strapi morph relation. Set `STRAPI_TOKEN` or skip this step (composition.assets is sufficient for the agent).
 - **Content-Type must NOT be set manually for multipart** — let `fetch` set the boundary automatically.
 
 ## Troubleshooting

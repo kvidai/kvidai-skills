@@ -27,7 +27,7 @@ export KVIDAI_API_KEY="<prod-media-apim-key>"            # APIM subscription key
 export KVIDAI_BASE_URL="https://api.kvid.ai"             # default if not set; staging: https://staging-api.kvid.ai
 ```
 
-The APIM policy injects the subscription's owner email as `X-Kvidai-User-Email`, so the upload is auto-scoped to that user — no need to pass an email in the body.
+The API auto-scopes uploads to the subscription owner — no need to pass an email in the body.
 
 ## Run
 

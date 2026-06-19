@@ -26,7 +26,7 @@ The kvidai CLI bundled skills teach agents how to call CLI commands and require 
 ### Option 1 — npx skills (recommended)
 
 ```bash
-npx skills add epicmobile18/kvidai-skills
+npx skills add kvidai/kvidai-skills
 ```
 
 Installs all skills into the current project for all detected agents automatically.
@@ -43,7 +43,7 @@ ln -s ../../skills/kvidai-skills/skills/kvidai-video-use     .claude/skills/kvid
 ### Option 3 — Git submodule
 
 ```bash
-git submodule add https://github.com/epicmobile18/kvidai-skills skills/kvidai-skills
+git submodule add https://github.com/kvidai/kvidai-skills skills/kvidai-skills
 # then add symlinks as in Option 2
 ```
 
