@@ -81,12 +81,12 @@
     },
     {
       "name": "kvidai",
-      "description": "Generate an image or video with the kvidai CLI. Use this when the user asks to generate an image or video, edit an existing kvidai project via the AI agent, or \"use kvidai\" for a generation task. Guides picking the right command, uploading inputs, waiting for async jobs, and saving outputs.",
+      "description": "Generate an image or video with the kvidai CLI, or manage a kvidai video project. Use this whenever the user asks to generate an image or video, edit an existing kvidai project via the AI agent, upload a file to kvid.ai, check an async job, or \"use kvidai\" for a task. Complete command reference — nothing else to load.",
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "146db2033d6a2614bea55deb390d59855f88669348dc942fc5f4bdf7e99fb458",
-          "bytes": 3629
+          "sha256": "0b5fd54ee23b7a896cd30e34fa473901765cc9e03d11367f0dcf6d1d8713e7c0",
+          "bytes": 8127
         }
       ]
     },
@@ -119,17 +119,6 @@
           "path": "scripts/kvidai-preset-client.mjs",
           "sha256": "3847a2e39a2ea5dac8ed39e6f8f04a3d75053b5caf7f78c532864c475340c2bf",
           "bytes": 3577
-        }
-      ]
-    },
-    {
-      "name": "kvidai-ref",
-      "description": "Complete kvidai CLI command reference — consult this whenever the user asks you to generate an image or video, upload files, check an async job, or manage a kvidai project. Use --json on every command to get structured output you can parse.",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "sha256": "7344cbe059ee6bf424347419e154b16addb0939dd62e14efcf3a20d861b79d69",
-          "bytes": 5666
         }
       ]
     },
@@ -351,8 +340,8 @@
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "99ecd3bef5dcc479843d56a3fd81dff9576bdba6c4bde0ecc76d4d903df1d2a1",
-          "bytes": 2100
+          "sha256": "5396490d4cdc834c9f0f1d525c7854d0b698d189498198814b6fe197cec06e54",
+          "bytes": 2099
         }
       ]
     },

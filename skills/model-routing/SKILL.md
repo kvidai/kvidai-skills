@@ -25,7 +25,7 @@ string that is passed through as-is to the server.
    docs) — never invent or guess one.
 3. There is no way to verify a `--model` value ahead of time from the CLI.
    If an invalid ID is passed, the command fails with a normal error (see
-   `kvidai-ref`'s "Error output" section) — surface that to the user rather
+   `kvidai`'s "Handling errors" section) — surface that to the user rather
    than retrying with a guessed alternative.
 
 ## What the other production skills should do instead

@@ -17,8 +17,7 @@ This is the single skill registry for kvidai. Some skills call `api.kvid.ai` dir
 
 | Skill | Description |
 |-------|-------------|
-| [`kvidai`](skills/kvidai/) | Core workflow: run a kvid.ai model end-to-end with the CLI |
-| [`kvidai-ref`](skills/kvidai-ref/) | Full kvidai CLI command reference |
+| [`kvidai`](skills/kvidai/) | Full kvidai CLI workflow + command reference |
 | [`model-routing`](skills/model-routing/) | Default endpoint IDs for the production skills below |
 | [`character-design`](skills/character-design/) | Consistent character designs and character media |
 | [`cinematography`](skills/cinematography/) | Cinematic image/video prompt direction |
@@ -46,7 +45,6 @@ ln -s ../../skills/kvidai-skills/skills/kvidai-media         .claude/skills/kvid
 ln -s ../../skills/kvidai-skills/skills/kvidai-preset        .claude/skills/kvidai-preset
 ln -s ../../skills/kvidai-skills/skills/kvidai-video-use     .claude/skills/kvidai-video-use
 ln -s ../../skills/kvidai-skills/skills/kvidai               .claude/skills/kvidai
-ln -s ../../skills/kvidai-skills/skills/kvidai-ref           .claude/skills/kvidai-ref
 ln -s ../../skills/kvidai-skills/skills/model-routing        .claude/skills/model-routing
 ln -s ../../skills/kvidai-skills/skills/character-design     .claude/skills/character-design
 ln -s ../../skills/kvidai-skills/skills/cinematography       .claude/skills/cinematography
