@@ -23,8 +23,7 @@ kvidai-skills/
 │   │   ├── install.md
 │   │   ├── helpers/
 │   │   └── skills/manim-video/
-│   ├── kvidai/                    # Core kvidai CLI workflow — requires kvidai CLI
-│   ├── kvidai-ref/                # Full kvidai CLI reference — requires kvidai CLI
+│   ├── kvidai/                    # Full kvidai CLI workflow + command reference — requires kvidai CLI
 │   ├── model-routing/             # Default endpoint IDs — requires kvidai CLI
 │   ├── character-design/          # Character design production — requires kvidai CLI
 │   ├── cinematography/            # Cinematic prompt direction — requires kvidai CLI
@@ -37,7 +36,7 @@ kvidai-skills/
 └── README.md                      # Human index
 ```
 
-CLI-dependent skills (bottom 8 above) were merged in from the `kvidai-cli` repo so that `kvidai/kvidai-cli` can go private later without breaking `kvidai skills install` — see [kvidai-cli AGENTS.md](https://github.com/kvidai/kvidai-cli) for the CLI-side install flow. Each of their `SKILL.md` states the CLI requirement right under the title.
+CLI-dependent skills (bottom 7 above) were merged in from the `kvidai-cli` repo so that `kvidai/kvidai-cli` can go private later without breaking `kvidai skills install` — see [kvidai-cli AGENTS.md](https://github.com/kvidai/kvidai-cli) for the CLI-side install flow. Each of their `SKILL.md` states the CLI requirement right under the title. `kvidai` and `kvidai-ref` were originally two separate skills (mirroring a fal.ai convention) but were merged into one `kvidai` skill — see its `SKILL.md` for why.
 
 ## Adding a New Skill
 
@@ -87,8 +86,7 @@ Requires the kvidai CLI installed locally:
 
 | Skill | Trigger | Description |
 |-------|---------|-------------|
-| `kvidai` | run a kvid.ai model, use kvidai | Core CLI workflow: discover, run, poll, download |
-| `kvidai-ref` | kvidai CLI reference | Full kvidai CLI command reference |
+| `kvidai` | run a kvid.ai model, use kvidai, kvidai CLI reference | Full CLI workflow + command reference: discover, run, poll, download |
 | `model-routing` | pick a model, no endpoint named | Default endpoint IDs for the production skills below |
 | `character-design` | character design, character media | Consistent character designs and character media |
 | `cinematography` | cinematic direction, shot language | Cinematic image/video prompt direction |
