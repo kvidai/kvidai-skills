@@ -1,143 +1,44 @@
 ---
 name: model-routing
 description: >
-  Choose default kvid.ai endpoint IDs for kvidai production skills. Use this
-  with commercial, character-design, cinematography, storytelling, and workflow
-  when the user has not named a specific model.
+  Explains kvidai's --model handling for image/video generation. Use this
+  with commercial, character-design, cinematography, storytelling, and
+  workflow when deciding whether to pass --model.
 ---
 
-# kvidai model routing
+# kvidai model handling
 
 > **Requires**: the [kvidai CLI](https://github.com/kvidai/kvidai-cli) installed locally (`kvidai --version` to check).
 
-Use these endpoint defaults when a domain skill needs a model. These choices
-come from project-specific guidance. Still run `kvidai schema <endpoint_id>
---json` before execution and `kvidai pricing <endpoint_id> --json` when cost
-matters.
+kvidai does **not** expose a model catalog or per-model schema through the
+CLI — there is no `models`/`schema`/`pricing` command and no list of valid
+`--model` IDs to browse or verify. `kvidai image generate` and
+`kvidai video t2v` / `video generate` all accept an optional `--model <id>`
+string that is passed through as-is to the server.
 
-Endpoint-first rule:
+## Rule
 
-1. Pick the endpoint ID from this skill.
-2. Verify it with `kvidai models --endpoint_id <endpoint_id> --json`.
-3. Inspect it with `kvidai schema <endpoint_id> --json`.
-4. Check `kvidai pricing <endpoint_id> --json` when cost matters.
-5. Use text search only if the routed endpoint is missing, deprecated,
-   rejected, or the task needs a model role not covered here.
+1. **Default**: omit `--model` entirely. The server picks a sensible
+   default for the command.
+2. **Only** pass `--model <id>` if the user explicitly names a specific
+   model ID they already know (e.g. from the kvid.ai dashboard or product
+   docs) — never invent or guess one.
+3. There is no way to verify a `--model` value ahead of time from the CLI.
+   If an invalid ID is passed, the command fails with a normal error (see
+   `kvidai-ref`'s "Error output" section) — surface that to the user rather
+   than retrying with a guessed alternative.
 
-Do not invent endpoint IDs.
+## What the other production skills should do instead
 
-## Image generation
+The domain skills (`commercial`, `character-design`, `cinematography`,
+`storytelling`, `workflow`) previously routed to specific fal.ai endpoint
+IDs per use case (text-heavy image work, premium stills, fast drafts,
+highest-quality video, lip-sync, etc.). None of that applies to kvidai:
+there's no equivalent tier of selectable models exposed via this CLI.
 
-### Text-heavy image work
-
-Use for infographics, UI mockups, posters, product labels, packaging text,
-readable signs, book covers, educational diagrams, and any output where text
-inside the image must be accurate.
-
-1. `openai/gpt-image-2`
-   - Use `quality=high`.
-   - Prefer 2K or 4K custom `image_size` when the final must be detailed.
-   - Treat as expensive. Do not use it for cheap drafts.
-2. `kvid-ai/nano-banana-pro`
-   - Use as the second choice when text is important but GPT Image 2 is not
-     available or the user accepts a lower ceiling.
-
-Cheap and simple models are not acceptable for text-heavy production.
-
-### Premium still images
-
-Use for commercial stills, realistic product scenes, editorial photography,
-cinematic keyframes, and high-quality visual concepts.
-
-- More realistic output: `openai/gpt-image-2`.
-- High-quality styled output: `openai/gpt-image-2`.
-- One step down: `kvid-ai/nano-banana-pro`.
-- Strong cheaper alternative: `kvid-ai/nano-banana-2`.
-
-### Fast draft images
-
-Use for quick concepts, mood options, rough composition, and cheap iteration.
-
-- `kvid-ai/flux-2/klein/9b`
-
-Do not use fast draft output as final commercial delivery unless the user asks.
-
-## Image editing
-
-Use for background replacement, relighting, cleanup, object changes, product
-placement, outfit changes, character edits, and multi-image composition.
-
-1. `kvid-ai/nano-banana-pro/edit`
-2. `openai/gpt-image-2/edit`
-3. `kvid-ai/bytedance/seedream/v5/lite/edit`
-
-For product fidelity, also consider:
-
-- `kvid-ai/nano-banana-pro`
-- `kvid-ai/nano-banana-2`
-- `kvid-ai/bytedance/seedream/v5/lite/text-to-image`
-- `kvid-ai/nano-banana-2/edit`
-
-For consistent characters, use `openai/gpt-image-2` first. If editing an
-existing character image, inspect `openai/gpt-image-2/edit`.
-
-## Video generation
-
-### Highest quality video
-
-Use Seedance 2.0 first for final, high-quality video.
-
-- Text to video: `bytedance/seedance-2.0/text-to-video`
-- Image to video: `bytedance/seedance-2.0/image-to-video`
-- Reference to video: `bytedance/seedance-2.0/reference-to-video`
-
-Fast variants exist for lower latency:
-
-- `bytedance/seedance-2.0/fast/text-to-video`
-- `bytedance/seedance-2.0/fast/image-to-video`
-- `bytedance/seedance-2.0/fast/reference-to-video`
-
-### Fast or lower-cost video
-
-Use Grok Imagine Video for fast, lower-cost motion previews and economical
-video generation.
-
-- Text to video: `xai/grok-imagine-video/text-to-video`
-- Image to video: `xai/grok-imagine-video/image-to-video`
-- Video edit: `xai/grok-imagine-video/edit-video`
-
-### Multi-shot storytelling
-
-Use in this order:
-
-1. `bytedance/seedance-2.0/text-to-video`
-2. `bytedance/seedance-2.0/image-to-video`
-3. `bytedance/seedance-2.0/reference-to-video`
-4. `kvid-ai/kling-video/v3/pro/text-to-video`
-5. `kvid-ai/kling-video/v3/pro/image-to-video`
-6. `alibaba/happy-horse/text-to-video`
-7. `alibaba/happy-horse/image-to-video`
-
-Use Kling v3 when its multi-prompt, element, or custom element controls match
-the requested shot plan. Use Happy Horse after Seedance and Kling unless the
-user specifically asks for it.
-
-### Native audio and lip-sync
-
-Use for talking avatars, speech-driven face motion, product spokespersons,
-UGC-style presenters, and lip-sync from an image plus audio or text.
-
-1. `veed/fabric-1.0`
-   - Image plus uploaded audio.
-2. `veed/fabric-1.0/text`
-   - Image plus text speech.
-3. `kvid-ai/creatify/aurora`
-   - Avatar video from image plus audio, with optional visual direction.
-
-## Utility endpoints
-
-Workflow utility endpoint IDs live in the `workflow` skill reference:
-`workflow/references/utility-endpoints.md`.
-
-Utility endpoints are allowed to be explicit because they are deterministic
-tools, not creative model choices. Always inspect schema before use.
+When those skills need a "which model" decision, the answer is simply:
+don't pass `--model` unless the user names one. Any quality/style guidance
+belongs in the **prompt** (`image generate <prompt>`, `video t2v <prompt>`)
+instead of a model choice — e.g. describe "high detail, sharp text" in the
+prompt rather than picking a text-optimized model, since there isn't one to
+pick via this CLI.

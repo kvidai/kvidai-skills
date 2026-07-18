@@ -12,8 +12,8 @@ schema and references.
 | 3 | 5s | hand pours milk into the coffee, soft cloud bloom, controlled motion, warm lifestyle lighting, no text |
 | 4 | 4s | final hero frame of cup and beans with clean negative space on right for copy, calm premium breakfast mood |
 
-Execution note: generate still or video per shot unless the selected endpoint
-supports a prompt list.
+Execution note: generate each shot as its own `image generate` or `video
+t2v` call — there's no prompt-list/multi-shot support on this CLI.
 
 ## 30 second architecture brand film
 

@@ -1,10 +1,10 @@
 ---
 name: kvidai-ref
 description: >
-  Complete kvidai CLI reference for kvid.ai — consult this whenever the user
-  asks you to search for models, run inference, upload files, check pricing,
-  or manage async jobs on kvid.ai. Use --json on every command to get
-  structured output you can parse.
+  Complete kvidai CLI command reference — consult this whenever the user
+  asks you to generate an image or video, upload files, check an async job,
+  or manage a kvidai project. Use --json on every command to get structured
+  output you can parse.
 ---
 
 # kvidai CLI reference
@@ -12,7 +12,9 @@ description: >
 > **Requires**: the [kvidai CLI](https://github.com/kvidai/kvidai-cli) installed locally (`kvidai --version` to check).
 
 kvidai is an agent-first CLI for kvid.ai. Every command emits structured JSON
-when called with `--json` or when stdout is not a TTY.
+when called with `--json` or when stdout is not a TTY. There is no model
+catalog or per-model schema to inspect — the command set below is the
+complete, fixed surface.
 
 ## Authentication
 
@@ -22,243 +24,137 @@ kvidai reads credentials from (in priority order):
 2. `~/.kvidai/config.json` (written by `kvidai setup`)
 3. A project `.env` file (if auto-load is enabled via `kvidai setup`)
 
+```
+kvidai setup --non-interactive --api-key <key> --json    # agents/CI
+kvidai setup                                              # interactive wizard
+```
+
+`KVIDAI_USER_EMAIL` is also required for `video t2v` and `assets upload`.
+
 ## Commands
 
-### models — search and inspect models
+### project — create and inspect video projects
 
 ```
-kvidai models [query] [--category <cat>] [--status active|deprecated|all] [--limit <n>] [--cursor <token>] [--endpoint_id <id,...>] [--expand openapi-3.0] [--json]
+kvidai project create <name> [--preset-id <id>] [--json]
+kvidai project get <id> [--json]
 ```
 
-Free-text search across 600+ models. Use `--endpoint_id` to fetch specific
-models by ID. Use `--expand openapi-3.0` to get the full OpenAPI schema.
-Use `--cursor` from a previous response to page through results.
+`create` returns `{ id }`. Most video work starts by creating a project,
+then either driving it with `video generate` (agent, multi-turn) or a
+one-off `video t2v` call.
 
-### schema — inspect model inputs/outputs
-
-```
-kvidai schema <endpoint_id> [--format compact|openapi] [--json]
-```
-
-Shows the input parameters and output shape for a model.
-`--format openapi` returns the full raw OpenAPI spec.
-Always run this before `kvidai run` to know what parameters the model accepts.
-
-### run — execute a model
+### video — generate video
 
 ```
-kvidai run <endpoint_id> --<param> <value> ... [--async] [--logs] [--download [template]] [--json]
+kvidai video generate <projectId> <message> [--cdn-url <url>] [--mime <type>] [--filename <name>] [--verbose] [--json]
+kvidai video t2v <prompt> [--model <id>] [--duration <s>] [--wait] [--output <path>] [--interval <ms>] [--timeout <ms>] [--json]
 ```
 
-Pass any model input parameter as a `--flag value` pair.
-Waits for the result by default and returns `{ status, endpoint_id, request_id, result }`.
+`generate` streams an AI agent editing an **existing** project over SSE and
+returns `{ projectId, tools, url }` (`url` is the kvid.ai editor link, not a
+media file). Use `--cdn-url` to attach a file (from `upload`/`assets upload`)
+as context for the agent's instruction. `--verbose` prints tool-call names
+to stderr as they happen.
 
-Use `--async` for long-running models (video generation, etc.).
-Returns `{ status: "submitted", request_id, endpoint_id }` immediately.
-Then poll with `kvidai status`.
+`t2v` is a standalone async text-to-video job — no project required.
+Without `--wait`/`--output` it returns immediately with `{ jobId, ... }`;
+poll it with `task status`. With `--wait` or `--output` it polls internally
+and returns the finished result (or downloads it, respectively).
 
-Use `--download` to save every media URL in the result to disk — see
-["Downloading output files"](#downloading-output-files) below.
-
-### status — check or retrieve an async job
-
-```
-kvidai status <endpoint_id> <request_id> [--result] [--logs] [--cancel] [--download [template]] [--json]
-```
-
-Without flags: returns queue position and job status.
-`--result`: blocks until complete and returns the full result.
-`--cancel`: cancels a queued job.
-`--download`: implies `--result`. Writes every media URL from the result to
-disk — see below.
-
-## Downloading output files
-
-Agents should **not** `curl` URLs out of the `result` payload. Pass
-`--download` to `run` or `status` instead; the CLI handles extraction,
-fetching, naming, and concurrency, and emits the saved paths in the JSON
-output under `downloaded_files[]`.
+### image — generate images
 
 ```
-kvidai run <endpoint_id> ... --download [template] --json
-kvidai status <endpoint_id> <request_id> --download [template] --json
+kvidai image generate <prompt> [--model <id>] [--size <preset>] [--num <n>] [--output <path>] [--json]
 ```
 
-Behavior:
+Synchronous — returns the result directly. `--size` accepts `square`,
+`square_hd`, `portrait_4_3`, `portrait_16_9`, `landscape_4_3`,
+`landscape_16_9` (default `square`). `--num` sets image count (default 1).
+`--output` downloads the first result image to that path.
 
-- `--download` with no value → save to cwd using the source file name
-  (from `file_name`, the URL path, or a `content_type`-derived extension).
-- `--download <dir>/` (trailing `/`) or an existing directory → save inside
-  that directory with source file names. Parent directories are created
-  recursively.
-- `--download <template>` → substitute placeholders and write to the
-  resulting path. Supported placeholders: `{index}` (0-based walk order),
-  `{name}` (basename without extension), `{ext}` (extension without dot),
-  `{request_id}`.
-- Plain filename with multiple outputs → first file keeps the name, later
-  files get `_1`, `_2`, … suffixes on collision.
-
-Detection rule: the CLI walks the `result` payload and downloads any object
-with a `url: string` starting with `http(s)://`. This matches every
-standard kvid.ai media output shape (`images[]`, `image_urls[]`, `video`,
-`audio`, etc.).
-
-Successful output (`run` with `--download`):
-
-```json
-{
-  "status": "completed",
-  "endpoint_id": "kvid-ai/flux/dev",
-  "request_id": "...",
-  "result": { "...": "untouched" },
-  "downloaded_files": [
-    { "url": "https://...", "path": "/abs/path/cat.png", "size_bytes": 204800, "json_path": "images[0]" }
-  ]
-}
-```
-
-If one or more URLs fail to download, the remaining files still land on
-disk and the failures appear under `download_failures[]`:
-
-```json
-{
-  "downloaded_files": [ ... ],
-  "download_failures": [
-    { "url": "https://...", "json_path": "images[1]", "error": "404 Not Found" }
-  ]
-}
-```
-
-The command's exit code reflects the model run itself, not individual
-download failures. When `download_failures[]` is non-empty, surface the
-errors to the user and/or retry those URLs.
-
-Guidance:
-
-- Default to `--download` whenever the user expects files on disk. It
-  replaces the old "parse result, then curl each URL" pattern.
-- For multi-output models (`num_images > 1`, `image_urls[]`, etc.), use a
-  template with `{index}` (e.g. `./out/{request_id}_{index}.{ext}`) to
-  guarantee unique paths.
-- `--download` on `status` implies `--result` — you do not need to pass
-  both. Combining `--download` with `--cancel` is rejected.
-
-### upload — upload a file to kvid.ai CDN
+### task — check or poll an async job
 
 ```
-kvidai upload <file_path_or_url> [--json]
+kvidai task status <jobId> [--wait] [--interval <ms>] [--timeout <ms>] [--output <path>] [--json]
 ```
 
-Accepts a local file path or a remote URL. Returns a CDN URL suitable for
-use as a model input parameter (e.g. `--image_url`).
+`jobId` comes from `video t2v`. Without `--wait`, returns the current status
+once. With `--wait`, polls (default every 5000ms, up to 600000ms) until the
+job completes or fails, then returns the full result. `--output` downloads
+the result video once complete (implies waiting for completion).
 
-### pricing — check model cost
-
-```
-kvidai pricing <endpoint_id> [--json]
-```
-
-### docs — search kvid.ai documentation
+### upload / assets — get files onto kvid.ai CDN
 
 ```
-kvidai docs <query> [--json]
+kvidai upload <file_path> [--json]
+kvidai assets upload <file1> [file2...] [--json]
+kvidai assets add-composition <projectId> <email> <assetJson> [--json]
 ```
+
+`upload` and `assets upload` both do a presigned-URL upload and return
+`{ cdnUrl, key, size }` (assets upload returns one such object per file).
+Use the `cdnUrl` as `video generate --cdn-url`, or with `add-composition` to
+attach an asset directly into a project's composition
+(`assetJson` example: `{"id":"asset_1","type":"image","remoteUrl":"..."}`).
+
+### docs — static documentation links (not a real search)
+
+```
+kvidai docs [query] [--json]
+```
+
+This does **not** perform a search — `query` is accepted but ignored. It
+always returns the same static links (`docs.kvid.ai`, `api.kvid.ai/docs`).
+Don't build a "discover via docs" step around this command.
 
 ## Error output
 
-Every command exits non-zero on failure and writes a JSON error object to
-stderr. The shape is stable across commands:
+Every command exits non-zero on failure and writes a JSON object to stderr:
 
 ```json
 {
-  "error": "<human-readable summary>",
-  "details": {
-    "endpoint_id": "kvid-ai/flux/schnell",
-    "request_id": "019d...",
-    "status": 422,
-    "error_type": "ValidationError" | "ApiError" | "Error",
-    "validation_errors": [
-      {
-        "field": "num_images",
-        "message": "Input should be less than or equal to 4",
-        "type": "less_than_equal",
-        "input": 20
-      }
-    ],
-    "body": { "detail": [ ... raw server payload ... ] },
-    "logs": [ { "level": "ERROR", "message": "...", "timestamp": "..." } ]
-  }
+  "error": "<one-line summary, often includes raw HTTP status + body>",
+  "details": { "...": "shape varies by command, may be absent" }
 }
 ```
 
-Field meanings:
-
-- `error` — one-line summary you can show the user.
-- `details.status` — HTTP status from kvid.ai (`422` input validation, `401`
-  unauthenticated, `403` forbidden, `404` endpoint not found, `429` rate
-  limited, `5xx` upstream). Missing for local errors (network, parsing).
-- `details.error_type` — `ValidationError` for 422 with FastAPI-style
-  `detail[]`; `ApiError` for other HTTP failures; `Error` for local errors.
-- `details.validation_errors` — present only when the server returned a
-  FastAPI validation payload. Each entry is `{ field, message, type, input }`
-  and uniquely identifies what the agent needs to fix. Dotted field paths
-  like `options.seed` or `images[0].url` point at nested inputs.
-- `details.body` — the raw response body, preserved for agents that need
-  the full FastAPI `ctx`/`expected` fields or vendor-specific payloads.
-- `details.logs` — recent model-side log lines when the failure happened
-  during inference (not for pre-flight validation errors).
-- `details.request_id` — included when the request reached kvid.ai; pass it
-  to `kvidai status <endpoint_id> <request_id> --logs --json` for full
-  history.
-
-Agent guidance:
-
-- For `status: 422`, read `validation_errors`, correct the offending args,
-  and retry. Re-run `kvidai schema <endpoint_id> --json` if you need
-  allowed enum values or numeric bounds.
-- For `401`/`403`, check credentials — do not retry.
-- For `404`, verify the `endpoint_id` with `kvidai models ... --json`.
-- For `429` or `5xx`, a short backoff-and-retry is acceptable; everything
-  else should be surfaced to the user.
+There is no standardized `validation_errors`/`endpoint_id`/`request_id`
+schema — read `error` for the summary, and `details` (when present) for
+extra context such as a `hint` on auth failures. On a 4xx, fix the request
+and retry; on 429/5xx, a short backoff-and-retry is reasonable.
 
 ## Common workflows
 
-### Synchronous inference (fast models)
+### One-off image
 ```
-kvidai schema kvid-ai/flux/dev --json
-kvidai run kvid-ai/flux/dev --prompt "a cat on the moon" --json
-```
-
-### Async inference (slow models — video, etc.)
-```
-kvidai run kvid-ai/veo3.1 --prompt "a dog running" --async --json
-# save the request_id from the response, then:
-kvidai status kvid-ai/veo3.1 <request_id> --result --json
+kvidai image generate "a cat on the moon" --size landscape_16_9 --output ./cat.png --json
 ```
 
-### Using a local image as input
+### One-off video, wait for it
 ```
-kvidai upload ./photo.jpg --json
-# use the returned url as input:
-kvidai run kvid-ai/some-model --image_url <cdn_url> --json
+kvidai video t2v "a dog running on a beach" --duration 10 --wait --output ./dog.mp4 --json
 ```
 
-### Discovering models for a task
+### One-off video, fire-and-poll
 ```
-kvidai models "text to video" --json
-kvidai schema <endpoint_id> --json
+kvidai video t2v "a dog running on a beach" --duration 10 --json
+# save jobId from the response, then:
+kvidai task status <jobId> --wait --output ./dog.mp4 --json
 ```
 
-### Saving outputs directly to disk
+### Using a local file as agent context
 ```
-# single file → cwd using source file name
-kvidai run kvid-ai/flux/dev --prompt "a cat" --download --json
+kvidai upload ./reference.jpg --json
+# use the returned cdnUrl:
+kvidai project create "New scene" --json
+kvidai video generate <projectId> "match the lighting from this reference" \
+  --cdn-url <cdnUrl> --mime image/jpeg --json
+```
 
-# multiple images → templated paths
-kvidai run kvid-ai/flux/dev --prompt "a cat" --num_images 4 \
-  --download "./out/{request_id}_{index}.{ext}" --json
-
-# async job → download on completion (implies --result)
-kvidai run kvid-ai/veo3.1 --prompt "a dog running" --async --json
-kvidai status kvid-ai/veo3.1 <request_id> --download ./videos/ --json
+### Multi-turn project editing
+```
+kvidai project create "Product launch" --json
+kvidai video generate <projectId> "make a 10s intro for our product" --verbose --json
+kvidai video generate <projectId> "make the intro faster-paced" --verbose --json
 ```

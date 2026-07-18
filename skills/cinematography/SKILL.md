@@ -2,8 +2,8 @@
 name: cinematography
 description: >
   Design cinematic image and video prompts for kvidai. Use this for shot
-  language, camera movement, lighting, lens choices, color grade, film texture,
-  scene blocking, and production-ready visual direction.
+  language, camera movement, lighting, lens choices, color grade, film
+  texture, scene blocking, and production-ready visual direction.
 ---
 
 # Cinematography with kvidai
@@ -17,81 +17,59 @@ cinematic" prompting. Load references as needed:
 - `references/lighting-lens-color.md`
 - `references/examples.md`
 
-Load `model-routing` alongside this skill for default endpoint choices.
-
 Write concrete visual direction. Avoid empty prestige words and em dashes.
+
+## Important limitation
+
+`kvidai image generate` and `kvidai video t2v` are text-to-media only — no
+reference/first-frame image input, no seed. Continuity language like "same
+lighting direction throughout" or "continue from the uploaded first frame"
+(see `references/shot-language.md`) works only within a *single* prompt's
+description of a continuous shot — it cannot bind to a previously generated
+image or an uploaded frame the way an image-to-video model would. If the
+user needs true first-frame continuity, say so plainly; the closest option
+is attaching a frame to a project agent turn (`kvidai video generate
+<projectId> <message> --cdn-url <url>`), which is best-effort.
 
 ## Inputs to collect
 
 Ask only for what affects the shot:
 
 - Subject and action.
-- Medium: still image, video, image-to-video, edit, storyboard frame.
+- Medium: still image or video.
 - Genre and mood.
 - Framing: close-up, medium, wide, overhead, POV, profile, locked-off.
 - Camera motion for video: push-in, dolly, tracking, handheld, crane, drone.
 - Lens feel: wide, normal, telephoto, macro, shallow or deep focus.
 - Lighting: natural, practical, studio, noir, high key, low key, backlit.
-- Output: aspect ratio, duration, first frame, last frame, download path.
-- Preferred model, if the user wants a specific cinematography model or
-  quality/cost profile.
+- Output: aspect ratio (via `--size` for images), duration (video), output path.
 
 ## kvidai workflow
 
-1. Start from routed endpoint IDs.
+1. Build the prompt using the SCLCAM structure below.
 
+2. Still image:
    ```bash
-   kvidai models --endpoint_id openai/gpt-image-2 --json
-   kvidai models --endpoint_id kvid-ai/nano-banana-pro --json
-   kvidai models --endpoint_id bytedance/seedance-2.0/text-to-video --json
-   kvidai models --endpoint_id bytedance/seedance-2.0/image-to-video --json
-   kvidai models --endpoint_id xai/grok-imagine-video/text-to-video --json
+   kvidai image generate "<cinematography prompt>" \
+     --size landscape_16_9 --output ./outputs/cinema/shot.png --json
    ```
 
-   Use text search only as fallback discovery for a missing camera-control
-   role:
-
+3. Video, standalone:
    ```bash
-   kvidai models "cinematic video generation camera movement" --json
-   kvidai docs "video generation camera movement prompt" --json
+   kvidai video t2v "<shot prompt>" --duration 8 \
+     --wait --output ./outputs/cinema/shot.mp4 --json
    ```
 
-2. Inspect schema and use only supported controls.
-
-   ```bash
-   kvidai schema <endpoint_id> --json
-   kvidai pricing <endpoint_id> --json
-   ```
-
-3. Upload references when using image-to-video, first frame, last frame, style
-   reference, or character/product continuity.
-
+4. Video, inside a project (multi-turn, can reference an uploaded frame —
+   best effort, see limitation above):
    ```bash
    kvidai upload ./frame.png --json
+   kvidai video generate <projectId> "<shot prompt>" \
+     --cdn-url <cdnUrl> --mime image/png --verbose --json
    ```
 
-4. Run stills with direct download.
-
-   ```bash
-   kvidai run <endpoint_id> \
-     --prompt "<cinematography prompt>" \
-     --download "./outputs/cinema/{request_id}_{index}.{ext}" \
-     --json
-   ```
-
-5. Run video async.
-
-   ```bash
-   kvidai run <endpoint_id> \
-     --prompt "<shot prompt>" \
-     --image_url "<uploaded frame if supported>" \
-     --async \
-     --json
-
-   kvidai status <endpoint_id> <request_id> \
-     --download "./outputs/cinema/{request_id}_{index}.{ext}" \
-     --json
-   ```
+Don't pass `--model` unless the user names a specific model ID — see the
+`model-routing` skill.
 
 ## Prompt build order
 
@@ -103,7 +81,7 @@ Use the SCLCAM structure:
 4. Camera motion: only for video or if motion blur is desired.
 5. Atmosphere: haze, rain, practicals, reflections, texture.
 6. Mood/color: palette, contrast, grade, exposure style.
-7. Output controls: aspect ratio, duration, first-frame continuity.
+7. Output controls: aspect ratio, duration.
 
 Example structure:
 
@@ -113,24 +91,6 @@ Example structure:
 [duration or aspect ratio], [continuity constraints]
 ```
 
-## Model routing
-
-- Premium realistic still: use `openai/gpt-image-2`.
-- Premium stylized still: use `openai/gpt-image-2`, then
-  `kvid-ai/nano-banana-pro`, then `kvid-ai/nano-banana-2`.
-- Fast draft still: use `kvid-ai/flux-2/klein/9b`.
-- Highest quality video: use `bytedance/seedance-2.0/text-to-video` or
-  `bytedance/seedance-2.0/image-to-video`.
-- Motion from a strong frame: use `bytedance/seedance-2.0/image-to-video`.
-- Fast or lower-cost video: use `xai/grok-imagine-video/text-to-video` or
-  `xai/grok-imagine-video/image-to-video`.
-- Complex camera language: inspect Seedance 2.0 first, then Kling v3 when
-  multi-prompt or element controls matter.
-- Story sequence: use the storytelling skill with this skill as shot-language
-  support.
-- Character or product continuity: use the relevant domain skill first, then
-  apply cinematography as the variable block.
-
 ## Quality bar
 
 Before returning, check:
@@ -139,9 +99,8 @@ Before returning, check:
 - Lens, shot size, and camera angle do not contradict each other.
 - Lighting direction is clear and consistent.
 - Color grade supports the mood without flattening subject detail.
-- Video prompt describes one shot unless the selected model supports multiple
-  prompts or shot lists.
-- Downloaded files come from `downloaded_files[]`.
+- Video prompt describes one continuous shot — there's no multi-shot list
+  control on this CLI.
 
 If a result looks generic, improve specificity in camera, blocking, light, and
 environment before adding more adjectives.
