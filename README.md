@@ -2,7 +2,9 @@
 
 Agent skills for the kvidai video platform — works with Claude Code, Codex, Goose, Copilot, and [50+ agents](https://github.com/vercel-labs/skills).
 
-## Skills
+This is the single skill registry for kvidai. Some skills call `api.kvid.ai` directly via Node.js and need no CLI; others teach the agent how to call the [kvidai CLI](https://github.com/kvidai/kvidai-cli) and require it installed locally. Each skill's `SKILL.md` states which applies — CLI-dependent skills say so right under the title (`> **Requires**: the kvidai CLI installed locally`).
+
+## Skills — no CLI required (call `api.kvid.ai` directly)
 
 | Skill | Description |
 |-------|-------------|
@@ -11,15 +13,20 @@ Agent skills for the kvidai video platform — works with Claude Code, Codex, Go
 | [`kvidai-preset`](skills/kvidai-preset/) | Create, list, update, delete presets |
 | [`kvidai-video-use`](skills/kvidai-video-use/) | Conversation-driven video editor: transcribe, cut, grade, subtitle, composite |
 
-## When to use this vs the kvidai CLI
+## Skills — require the kvidai CLI installed locally
 
-| Situation | Use |
-|---|---|
-| Manage video projects, presets, media — or edit video by conversation — **any agent, no CLI needed** | **kvidai-skills** (this repo) |
-| Generate images/video/audio with a kvid.ai model, **kvidai CLI installed locally** | [kvidai CLI](https://github.com/kvidai/kvidai-cli) bundled skills (`kvidai init`) |
+| Skill | Description |
+|-------|-------------|
+| [`kvidai`](skills/kvidai/) | Core workflow: run a kvid.ai model end-to-end with the CLI |
+| [`kvidai-ref`](skills/kvidai-ref/) | Full kvidai CLI command reference |
+| [`model-routing`](skills/model-routing/) | Default endpoint IDs for the production skills below |
+| [`character-design`](skills/character-design/) | Consistent character designs and character media |
+| [`cinematography`](skills/cinematography/) | Cinematic image/video prompt direction |
+| [`commercial`](skills/commercial/) | Commercial/product/ad production |
+| [`storytelling`](skills/storytelling/) | Multi-shot narrative workflows |
+| [`workflow`](skills/workflow/) | Multi-step media pipelines |
 
-These skills call `api.kvid.ai` directly via Node.js — the kvidai CLI binary is **not required**.
-The kvidai CLI bundled skills teach agents how to call CLI commands and require the binary to be present on the same machine.
+Install these with `kvidai init` / `kvidai skills install <name>` (ships with the CLI, see [kvidai CLI README](https://github.com/kvidai/kvidai-cli)) or via `npx skills add` below like any other skill in this repo.
 
 ## Installation
 
@@ -38,6 +45,14 @@ ln -s ../../skills/kvidai-skills/skills/kvidai-video-project .claude/skills/kvid
 ln -s ../../skills/kvidai-skills/skills/kvidai-media         .claude/skills/kvidai-media
 ln -s ../../skills/kvidai-skills/skills/kvidai-preset        .claude/skills/kvidai-preset
 ln -s ../../skills/kvidai-skills/skills/kvidai-video-use     .claude/skills/kvidai-video-use
+ln -s ../../skills/kvidai-skills/skills/kvidai               .claude/skills/kvidai
+ln -s ../../skills/kvidai-skills/skills/kvidai-ref           .claude/skills/kvidai-ref
+ln -s ../../skills/kvidai-skills/skills/model-routing        .claude/skills/model-routing
+ln -s ../../skills/kvidai-skills/skills/character-design     .claude/skills/character-design
+ln -s ../../skills/kvidai-skills/skills/cinematography       .claude/skills/cinematography
+ln -s ../../skills/kvidai-skills/skills/commercial           .claude/skills/commercial
+ln -s ../../skills/kvidai-skills/skills/storytelling         .claude/skills/storytelling
+ln -s ../../skills/kvidai-skills/skills/workflow             .claude/skills/workflow
 ```
 
 ### Option 3 — Git submodule
