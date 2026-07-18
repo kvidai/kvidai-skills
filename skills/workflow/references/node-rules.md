@@ -1,81 +1,71 @@
-# Node rules
+# Plan item rules
 
-## Planner node
+kvidai has no node/pipeline API — "node" here just means one entry in your
+plan, i.e. one `image generate` or `video t2v` call. These are guidelines
+for writing that plan, not a schema to fill in.
 
-- Produces the workflow graph, shot table, or variant matrix.
-- Output must be structured enough to execute without interpretation drift.
-- Include node IDs, dependencies, intended endpoint role, inputs, and expected
-  outputs.
-- Keep creative planning separate from executable parameters.
+## Planner
 
-## Extractor node
+- Produce a flat list of assets (not a graph — there are no dependencies
+  between kvidai calls beyond order of execution).
+- Output must be structured enough to execute without interpretation
+  drift: id, command (`image generate` / `video t2v` / `video generate`),
+  prompt, output path.
+- Keep creative planning separate from the exact prompt text you'll send.
 
-- Converts planner output into one narrow prompt, caption, subtitle, filename,
-  or parameter set.
-- Use deterministic wording and low creativity.
-- Prefer split or merge text utilities when the task is simple string
-  manipulation.
+## Image generation
 
-## Image generation node
+- One prompt, one call, one output file. No aspect-ratio/count control
+  beyond `--size` and `--num`.
+- Don't route to a specific `--model` unless the user names one — see
+  `model-routing`.
+- For product or character continuity, repeat the exact anchor/invariant
+  text in every prompt — there is no reference-image or seed input to lean
+  on instead.
 
-- Choose the endpoint from `model-routing` first.
-- Verify it with `kvidai models --endpoint_id <endpoint_id> --json`.
-- Use free-text `kvidai models "<query>" --json` only when the routed
-  endpoint is missing or the role is not covered.
-- Inspect schema before setting aspect ratio, image size, count, seed, or
-  negative prompt.
-- For grids, describe layout and panel count exactly.
-- For product or character continuity, prefer reference or edit workflows.
+## Video generation
 
-## Image editing node
+- `video t2v` is text-to-video only — no reference frame, no seed, no
+  multi-shot input.
+- `video generate <projectId> <message>` is the only way to attach a file
+  (`--cdn-url`) as context, and it drives a project-editing AI agent, not
+  a deterministic image/video-edit tool. Treat its output as best-effort.
+- Keep motion prompts short and physically specific (subject motion,
+  camera motion, ambient motion).
 
-- Upload every source image first.
-- Change one thing per pass.
-- State preservation rules first, edit instruction second.
-- If multiple references are used, assign roles: identity, style, background,
-  product, pose, texture.
+## What does NOT exist — don't plan these as steps
 
-## Image-to-video node
+- Image editing / background replacement / inpainting.
+- Resize, crop, composite, overlay, grid layout.
+- Segmentation, masking, edge detection.
+- Subtitle generation, transcription, TTS, audio mixing/merging.
+- Upscaling, compression, format conversion.
+- Stitching/merging separate clips into one file.
 
-- Prefer image-to-video when a reference frame exists.
-- Use short motion prompts, usually 15 to 35 words.
-- Specify subject motion, camera motion, and ambient motion.
-- Avoid describing static composition again unless the schema or model needs it.
-- Run async and download via `kvidai status`.
+If the deliverable needs any of the above, tell the user this CLI can't do
+it and suggest an external tool (ffmpeg, an image editor, a captioning
+tool) for that specific step.
 
-## Utility node
+## QA
 
-- Utility work should be deterministic: resize, crop, grid, composite, overlay,
-  subtitle, join audio and video, speed change, split, merge, compress.
-- Always inspect schema because utility endpoints often have exact field names.
-- Use generated result URLs for downstream inputs when available.
-- Use `kvidai upload` for local intermediate files before passing them into
-  another endpoint.
+Use a manual or vision-based check after each generation:
 
-## QA node
+- Identity preserved (if a character/product anchor was used).
+- Text is absent or intentional (there's no way to control in-image text
+  precisely).
+- Clip duration matches the plan.
+- Output file actually exists at the recorded path.
 
-Use a manual or vision-based check after high-risk nodes:
-
-- Identity preserved.
-- Product logo and packaging preserved.
-- Crop and aspect ratio correct.
-- Text is absent, intentional, or added by a text utility.
-- Audio and subtitle timing match.
-- Clip order and duration match the plan.
-
-## Manifest node
+## Manifest
 
 Return a compact manifest at the end:
 
 ```json
 {
-  "node_id": "shot_03_i2v",
-  "role": "image_to_video",
-  "endpoint_id": "selected endpoint",
-  "request_id": "kvid request id",
-  "inputs": ["source url or local path"],
-  "outputs": ["result media url"],
-  "downloaded_files": ["local file path"],
+  "asset_id": "shot_03",
+  "command": "video t2v",
+  "prompt_summary": "short summary",
+  "output_path": "./outputs/workflow/shot_03.mp4",
   "status": "accepted | retried | rejected",
   "notes": "short defect or continuity note"
 }

@@ -1,56 +1,44 @@
 # Storytelling workflows
 
-## Native multi-prompt sequence
-
-Use only when schema supports multiple prompts, shot arrays, scenes, timeline,
-or keyframe-like fields.
-
-1. Inspect schema and identify the exact multi-shot fields.
-2. Convert the story into concise shot prompts.
-3. Keep one continuity anchor outside the repeated shot details if schema
-   supports a global prompt.
-4. Run async and download the completed result.
-5. Check whether the model returned one video or per-shot files.
+There is no multi-prompt/timeline API on this CLI — every workflow below
+reduces to running `video t2v` (or `image generate`) once per shot,
+independently, with continuity carried only by repeating anchor text.
 
 ## Manual per-shot video
 
-Use when the model supports only one shot at a time.
+The only way to build a sequence with this CLI.
 
-1. Create a shot table.
-2. Generate or upload a reference frame for each shot.
-3. Run each shot with unique download templates.
-4. Record endpoint, request id, prompt, local output path, and defects.
-5. Return clips in timeline order. Do not claim they are stitched unless they
-   are actually stitched by the model or another tool.
-
-## First-frame to last-frame
-
-1. Generate or choose the opening frame.
-2. Generate or choose the target final frame.
-3. Upload both frames if local.
-4. Inspect schema for accepted first/last frame fields.
-5. Prompt the transition as one physical motion or transformation.
-6. Run async and download.
+1. Create a shot table (see `shot-planning.md`).
+2. Write one prompt per shot, repeating the continuity anchor verbatim in
+   each.
+3. Generate each shot separately, with a distinct `--output` path:
+   ```bash
+   kvidai video t2v "<shot 1 prompt>" --duration 4 --wait --output ./outputs/story/shot-01.mp4 --json
+   kvidai video t2v "<shot 2 prompt>" --duration 5 --wait --output ./outputs/story/shot-02.mp4 --json
+   ```
+4. Record duration, prompt, local output path, and defects per shot.
+5. Return clips in timeline order. Do not claim they are stitched — kvidai
+   does not combine them into one file.
 
 ## Character narrative
 
-1. Use `character-design` to create or confirm the anchor.
-2. Build shot variables around action, expression, and location.
-3. Use image-to-video from approved stills when identity drift matters.
-4. Compare each result to the anchor before advancing to the next shot.
+1. Use `character-design` to build the anchor.
+2. Repeat the exact anchor text in every shot's prompt (no reference-image
+   or seed mechanism exists to enforce this automatically).
+3. Compare each result to the anchor before advancing to the next shot —
+   drift is likely since nothing binds the shots together besides the text.
 
 ## Product narrative
 
 1. Use `commercial` to define product invariants.
 2. Plan the sequence around hook, feature, context, proof, final frame.
-3. Use the same product reference for every shot if schema allows it.
-4. Keep motion modest when packaging fidelity matters.
+3. Repeat the exact product-invariant text in every shot's prompt.
+4. Keep motion modest when packaging fidelity matters — there's no
+   reference image to fall back on if a shot drifts.
 
-## Audio narrative
+## Audio
 
-1. Search for narration, music, or sound generation models with `kvidai
-   models`.
-2. Inspect schema and run audio jobs with `--download`.
-3. Use transcript or beat timing to set shot durations.
-4. Return audio path and visual clip paths separately unless a model produces
-   combined audio-video output.
+kvidai's CLI has **no audio generation command** — no narration, music, or
+sound-design endpoint. If the user needs a voiceover or soundtrack, say so
+plainly and point them to a separate tool; don't imply this skill can
+produce it.

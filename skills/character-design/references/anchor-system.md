@@ -59,7 +59,7 @@ SHOT VARIABLE:
 ## Consistency escalation
 
 1. Text-only anchor for exploration.
-2. Approved image reference for continuity.
-3. Edit or reference-image workflow for outfit and expression variations.
-4. Image-to-video from an approved still for motion.
-5. User-selected identity-preserving endpoint for production series.
+2. Longer, more concrete anchor detail when drift appears.
+3. Attach a reference image to a project agent turn (`video generate
+   --cdn-url`) for best-effort continuity — not a guaranteed edit; the CLI
+   has no dedicated image-edit or image-to-video command.
