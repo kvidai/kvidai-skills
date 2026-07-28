@@ -179,7 +179,7 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "36c13f602f7ffda65cd65e1798ab8687d648b6aae299efee16c695fbccf3f9dd",
+          "sha256": "0cd47c652ba8b50d5c51a36306a54bdf456d790bd4aa14c615269a48fd077b55",
           "bytes": 29849
         },
         {
@@ -204,7 +204,7 @@
         },
         {
           "path": "helpers/transcribe.py",
-          "sha256": "455130ee1fe9354d6b42475a2b4b3ab31c0981252de682f19346c055310c1908",
+          "sha256": "46e7ea1d0f44a4c176f520078a22f51e1ca947d9337e9557471aba4a2199a5e2",
           "bytes": 7035
         },
         {
@@ -329,8 +329,8 @@
         },
         {
           "path": "tests/e2e_transcribe.py",
-          "sha256": "3fe9d4028bbb5d976463d0b4b8603eb2c52465b3b7704eb4f0adfdded7c1ad25",
-          "bytes": 16856
+          "sha256": "eb17ac17d62cda7006e60362fd1bcb3f052365f49cb21705e4e7682f4e081670",
+          "bytes": 16921
         }
       ]
     },
