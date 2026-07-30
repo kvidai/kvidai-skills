@@ -112,13 +112,13 @@
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "b25f5d7c27d3857d6290068824aabd04238dc3c44ded7aa8093f06ab381785ee",
-          "bytes": 4153
+          "sha256": "702c6da594c7cd8b93c429c3a990def2891466a4368801ed13ca30e494155f4f",
+          "bytes": 5071
         },
         {
           "path": "scripts/kvidai-media-client.mjs",
-          "sha256": "94437be29401e246aafa5866bf53bc07bab21d7b6962c2354f4b7369c4b6f62c",
-          "bytes": 4939
+          "sha256": "c1347a076827ed668b6f9b0a3013c03e6ccb0ef15c003d3df0690f24df0bb4c5",
+          "bytes": 6369
         }
       ]
     },
@@ -169,8 +169,8 @@
         },
         {
           "path": "scripts/kvidai-client.mjs",
-          "sha256": "807569e756359a67f9c6b348935b3aec8028b79b7d7ba73d5f99aacc3af788d8",
-          "bytes": 15107
+          "sha256": "a626f26247ce94c10e02b35c45cf241e3f3d2a88fa158e30f1fdf99ab82d0bc4",
+          "bytes": 15338
         }
       ]
     },

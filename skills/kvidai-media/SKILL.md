@@ -5,7 +5,9 @@ metadata:
   tags: kvidai, media, upload, presigned, cdn, apim
 ---
 
-The kvidai Media API is a public REST surface on `api.kvid.ai/media` (Azure APIM) that wraps the Strapi `media-management` controller. Unlike the legacy multipart upload, this Skill uses a **presigned URL** pattern — the client requests a short-lived signed PUT URL, uploads the file binary directly to CDN storage (DigitalOcean Spaces), and gets back a public cdnUrl that any other kvidai API can reference.
+The kvidai Media API is a public REST surface on `api.kvid.ai/media` (Azure APIM) that wraps the Strapi `media-management` controller. Unlike the legacy multipart upload, this Skill uses a **presigned URL** pattern — the client requests a short-lived signed PUT URL, uploads the file binary directly to CDN storage (DigitalOcean Spaces), then registers the object in the Strapi Media Library so it gets an owner and a file id, and gets back a public cdnUrl that any other kvidai API can reference.
+
+`upload-file` runs three steps: (1) `POST /presigned-upload-url` to get the signed URL, (2) direct `PUT` of the bytes to DO Spaces, (3) `POST /complete-upload` to register the file in Strapi Media Library. Step 3 is what records the **owner** (`caption.ownerEmail`, from the APIM-injected `X-Kvidai-User-Email`) and returns a `fileId` — without it the object lives in DO Spaces but is untracked, so `list-files` / `get-file` / `delete-file` cannot find it. Step 3 is non-fatal: if it fails, the CDN upload still succeeded and `cdnUrl` is returned with a warning, but the file will have no owner.
 
 The client lives at `.claude/skills/kvidai-media/scripts/kvidai-media-client.mjs` and runs with plain `node` (no tsx required).
 
@@ -82,7 +84,7 @@ node .claude/skills/kvidai-video-project/scripts/kvidai-client.mjs \
 }
 ```
 
-`upload-file` additionally performs the PUT internally; the final terminal output contains both the response above and `{ ok: true }` confirming the PUT succeeded.
+`upload-file` additionally performs the PUT **and** the `complete-upload` registration internally; its terminal output is `{ ok: true, cdnUrl, key, fileId, ... }`. A present `fileId` confirms the file was registered with an owner. If `fileId` is absent and a `WARN: complete-upload failed` line was printed, the bytes reached the CDN but the file has no owner and won't appear in `list-files`.
 
 ## Constraints
 

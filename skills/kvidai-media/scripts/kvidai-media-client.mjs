@@ -79,6 +79,22 @@ async function getPresignedUrl(filename, mimeType, size) {
   return res?.data ?? res;
 }
 
+// Register the object in Strapi Media Library after the PUT succeeds.
+// Throws (does not process.exit) so callers can treat failure as non-fatal.
+async function completeUpload({ key, cdnUrl, filename, mimeType, size }) {
+  const body = { key, cdnUrl, filename, mimeType };
+  if (typeof size === 'number') body.size = size;
+  const url = `${BASE_URL}${PREFIX}/complete-upload`;
+  const res = await fetch(url, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+  const text = await res.text();
+  let json;
+  try { json = text ? JSON.parse(text) : null; } catch { json = text; }
+  if (!res.ok) {
+    throw new Error(`POST ${url} → ${res.status} ${typeof json === 'string' ? json : JSON.stringify(json)}`);
+  }
+  return json?.data ?? json;
+}
+
 async function uploadFile(localPath) {
   const stat = fs.statSync(localPath);
   const filename = path.basename(localPath);
@@ -101,7 +117,20 @@ async function uploadFile(localPath) {
     process.exit(1);
   }
 
-  return { ok: true, cdnUrl, key, uploadUrl, expiresInSeconds, size, mimeType, filename };
+  // Register the uploaded object in Strapi Media Library so it gets an owner
+  // (caption.ownerEmail) and a file id. Without this the object exists in DO
+  // Spaces but is untracked — list/get/delete can't find it.
+  // APIM injects X-Kvidai-User-Email, so no email is needed in the body.
+  // Non-fatal: the PUT already succeeded, so a failure here still returns cdnUrl.
+  let fileId;
+  try {
+    const registered = await completeUpload({ key, cdnUrl, filename, mimeType, size });
+    fileId = registered?.id;
+  } catch (err) {
+    console.error(`WARN: complete-upload failed — file uploaded to CDN but NOT registered (no owner). ${err.message}`);
+  }
+
+  return { ok: true, cdnUrl, key, fileId, uploadUrl, expiresInSeconds, size, mimeType, filename };
 }
 
 const [, , cmd, ...args] = process.argv;
