@@ -30,7 +30,7 @@ if (!API_KEY) {
 
 function headers(extra = {}) {
   return {
-    'Ocp-Apim-Subscription-Key': API_KEY,
+    'api-key': API_KEY,
     'Content-Type': 'application/json',
     ...extra,
   };

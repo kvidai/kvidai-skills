@@ -91,6 +91,22 @@
       ]
     },
     {
+      "name": "kvidai-ai",
+      "description": "kvid.ai APIM 생성 엔드포인트 래퍼 (기존 kvidai CLI 미포함분). voice(TTS)·stt·talk-v2v·ai-edit. api-key 헤더 + credit 식별(email). Triggers on TTS, 나레이션, 음성 생성, speech-to-text, 자막 추출, 립싱크, talk, 영상 편집 AI.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ce09047255afe0be03075ccfe3b67c4b2f8aa0875f1dc73eb22a7e2eef5b5e7a",
+          "bytes": 3088
+        },
+        {
+          "path": "scripts/kvidai-ai-client.mjs",
+          "sha256": "6b6505b43a7f3c2164267fec304ff1aa61df10599e007812ee9a1958437b087b",
+          "bytes": 10255
+        }
+      ]
+    },
+    {
       "name": "kvidai-media",
       "description": "Use when you need to upload a media file (image, video, audio, pdf, text) to kvidai CDN so that an agent / video-project can reference it by URL. Triggers on media upload, file upload, attach file, cdnUrl, presigned URL, 이미지 업로드, 영상 업로드, 첨부, 파일 업로드. Wraps api.kvid.ai/media — issues a presigned PUT URL, performs the PUT direct to DO Spaces, then returns the public cdnUrl. The cdnUrl can be passed to kvidai-video-project agent-generate as an attachedFile.",
       "files": [
@@ -101,8 +117,8 @@
         },
         {
           "path": "scripts/kvidai-media-client.mjs",
-          "sha256": "6b483d4f8d7d204c9fb3fe6c679009aaab63070b80f5056ef75e0e8f793226a2",
-          "bytes": 4957
+          "sha256": "94437be29401e246aafa5866bf53bc07bab21d7b6962c2354f4b7369c4b6f62c",
+          "bytes": 4939
         }
       ]
     },
@@ -117,8 +133,8 @@
         },
         {
           "path": "scripts/kvidai-preset-client.mjs",
-          "sha256": "3847a2e39a2ea5dac8ed39e6f8f04a3d75053b5caf7f78c532864c475340c2bf",
-          "bytes": 3577
+          "sha256": "99f0bdca82cbca99d10d74fa5476e8bbe610c11154b481816c4c26e26f631b86",
+          "bytes": 3559
         }
       ]
     },
@@ -153,8 +169,8 @@
         },
         {
           "path": "scripts/kvidai-client.mjs",
-          "sha256": "080b572dead6fc7d76ae3ec761175a63374de855eb1283399d23a3ee2bf28b33",
-          "bytes": 13851
+          "sha256": "807569e756359a67f9c6b348935b3aec8028b79b7d7ba73d5f99aacc3af788d8",
+          "bytes": 15107
         }
       ]
     },

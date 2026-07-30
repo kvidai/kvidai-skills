@@ -182,6 +182,21 @@ export async function addCompositionAsset(projectId, email, asset) {
 }
 
 /**
+ * Replace the whole composition. PATCH /video-project/:id/composition operation "replace".
+ * @param {number} projectId
+ * @param {object} composition  Full composition JSON { fps, compositionWidth, compositionHeight, tracks, items, assets }
+ */
+export async function replaceComposition(projectId, composition) {
+  const r = await fetch(`${BASE_URL}/video-project/${projectId}/composition`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'api-key': API_KEY },
+    body: JSON.stringify({ operation: 'replace', data: { composition } }),
+  });
+  if (!r.ok) throw new Error(`replaceComposition ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+/**
  * Attach uploaded file IDs to a project's media relation (Strapi morph relation — origin archive).
  * Requires STRAPI_TOKEN (Bearer) env var — the standard /api/video-projects PUT needs auth.
  * Optional: composition.assets is sufficient for the agent; this is for the library/archive side.
@@ -308,6 +323,19 @@ switch (cmd) {
     }
     const asset = JSON.parse(assetJson);
     const result = await addCompositionAsset(Number(pid), email, asset);
+    console.log(JSON.stringify(result, null, 2));
+    break;
+  }
+  case 'replace-composition': {
+    // usage: node kvidai-client.mjs replace-composition <projectId> <path-to-composition-json>
+    const [pid, file] = args;
+    if (!pid || !file) {
+      console.error('Usage: node kvidai-client.mjs replace-composition <projectId> <composition.json>');
+      process.exit(1);
+    }
+    const { readFile } = await import('node:fs/promises');
+    const composition = JSON.parse(await readFile(file, 'utf8'));
+    const result = await replaceComposition(Number(pid), composition);
     console.log(JSON.stringify(result, null, 2));
     break;
   }

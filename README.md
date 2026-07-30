@@ -11,6 +11,7 @@ This is the single skill registry for kvidai. Some skills call `api.kvid.ai` dir
 | [`kvidai-video-project`](skills/kvidai-video-project/) | Create projects, generate videos via AI agent (SSE), poll status |
 | [`kvidai-media`](skills/kvidai-media/) | Upload media, presigned URL, list/delete assets |
 | [`kvidai-preset`](skills/kvidai-preset/) | Create, list, update, delete presets |
+| [`kvidai-ai`](skills/kvidai-ai/) | Generation endpoints not in the CLI: voice (TTS), speech-to-text, ai-edit |
 | [`kvidai-video-use`](skills/kvidai-video-use/) | Conversation-driven video editor: transcribe, cut, grade, subtitle, composite |
 
 ## Skills — require the kvidai CLI installed locally
