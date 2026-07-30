@@ -52,7 +52,7 @@ export async function getProject(id) {
  *                                            Shape: [{ name, type:'image|video|audio'|'pdf'|'text', mimeType, size, cdnUrl }]
  */
 export async function agentGenerate(projectId, message, onTool, options = {}) {
-  const { filePaths, attachedFiles } = options;
+  const { filePaths, attachedFiles, presetId } = options;
 
   let fetchInit;
   if (filePaths?.length) {
@@ -60,7 +60,7 @@ export async function agentGenerate(projectId, message, onTool, options = {}) {
     const { readFile } = await import('node:fs/promises');
     const { basename } = await import('node:path');
     const fd = new FormData();
-    fd.append('data', JSON.stringify({ projectId, message, chatHistory: [] }));
+    fd.append('data', JSON.stringify({ projectId, message, chatHistory: [], ...(presetId ? { presetId } : {}) }));
     for (const fp of filePaths) {
       const buf = await readFile(fp);
       fd.append('files', new Blob([buf]), basename(fp));
@@ -69,6 +69,7 @@ export async function agentGenerate(projectId, message, onTool, options = {}) {
     fetchInit = { method: 'POST', headers: { 'api-key': API_KEY }, body: fd };
   } else {
     const body = { projectId, message, chatHistory: [] };
+    if (presetId) body.presetId = presetId;
     if (attachedFiles?.length) body.attachedFiles = attachedFiles;
     fetchInit = {
       method: 'POST',
@@ -253,6 +254,7 @@ switch (cmd) {
     const positional = [];
     const cdnAttachments = [];
     let pending = {};
+    let presetId;
     for (let i = 0; i < args.length; i++) {
       const a = args[i];
       if (a === '--cdn-url') {
@@ -261,6 +263,7 @@ switch (cmd) {
       } else if (a === '--mime') pending.mimeType = args[++i];
       else if (a === '--filename') pending.name = args[++i];
       else if (a === '--size') pending.size = Number(args[++i]);
+      else if (a === '--preset-id' || a === '--presetId') presetId = args[++i];
       else positional.push(a);
     }
     if (pending.cdnUrl) cdnAttachments.push(pending);
@@ -269,6 +272,7 @@ switch (cmd) {
     log(`Streaming agent for project ${pid}...`);
 
     let opts = {};
+    if (presetId) opts.presetId = presetId;
     if (cdnAttachments.length) {
       // mime/type 추정 (사용자가 안 주면 url 으로 추측)
       const inferType = (mime) => {
