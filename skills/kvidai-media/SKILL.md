@@ -27,9 +27,10 @@ All paths below are relative to the **kvidai monorepo root**.
 ```bash
 export KVIDAI_API_KEY="<prod-media-apim-key>"            # APIM subscription key, scope = media product
 export KVIDAI_BASE_URL="https://api.kvid.ai"             # default if not set; staging: https://staging-api.kvid.ai
+export KVIDAI_USER_EMAIL="<account-email>"               # required for list-files/get-file/delete-file/stats (owner-scoped reads)
 ```
 
-The API auto-scopes uploads to the subscription owner — no need to pass an email in the body.
+Uploads (`upload-file`, `complete-upload`) auto-scope to the subscription owner via api-key — no email needed. The owner-scoped **read** routes (`list-files`, `get-file`, `delete-file`, `stats`) do NOT get the injected email header and require it as a `?email=` query param, taken from `KVIDAI_USER_EMAIL` (omitting it → `400 EMAIL_REQUIRED`).
 
 ## Run
 

@@ -21,6 +21,7 @@ import path from 'node:path';
 
 const API_KEY = process.env.KVIDAI_API_KEY;
 const BASE_URL = process.env.KVIDAI_BASE_URL || 'https://api.kvid.ai';
+const USER_EMAIL = process.env.KVIDAI_USER_EMAIL;
 const PREFIX = '/media';
 
 if (!API_KEY) {
@@ -56,6 +57,18 @@ async function apimRequest(method, subPath, body) {
 
 function print(result) {
   console.log(JSON.stringify(result, null, 2));
+}
+
+// Owner-scoped read/delete routes (files, stats) resolve the caller by an `email`
+// query param — APIM does NOT inject the email header on these routes, so omitting
+// it returns 400 EMAIL_REQUIRED. Upload / complete-upload don't need it (api-key).
+function withEmail(subPath) {
+  if (!USER_EMAIL) {
+    console.error('KVIDAI_USER_EMAIL is required for this command (owner-scoped).');
+    process.exit(1);
+  }
+  const sep = subPath.includes('?') ? '&' : '?';
+  return `${subPath}${sep}email=${encodeURIComponent(USER_EMAIL)}`;
 }
 
 // MIME type heuristic from extension — fallback when caller doesn't pass one.
@@ -154,23 +167,23 @@ switch (cmd) {
     break;
   }
   case 'list-files': {
-    print(await apimRequest('GET', '/files'));
+    print(await apimRequest('GET', withEmail('/files')));
     break;
   }
   case 'get-file': {
     const id = args[0];
     if (!id) { console.error('get-file requires <fileId>'); process.exit(1); }
-    print(await apimRequest('GET', `/files/${id}`));
+    print(await apimRequest('GET', withEmail(`/files/${id}`)));
     break;
   }
   case 'delete-file': {
     const id = args[0];
     if (!id) { console.error('delete-file requires <fileId>'); process.exit(1); }
-    print(await apimRequest('DELETE', `/files/${id}`));
+    print(await apimRequest('DELETE', withEmail(`/files/${id}`)));
     break;
   }
   case 'stats': {
-    print(await apimRequest('GET', '/stats'));
+    print(await apimRequest('GET', withEmail('/stats')));
     break;
   }
   default: {
