@@ -59,14 +59,12 @@ function print(result) {
   console.log(JSON.stringify(result, null, 2));
 }
 
-// Owner-scoped read/delete routes (files, stats) resolve the caller by an `email`
-// query param — APIM does NOT inject the email header on these routes, so omitting
-// it returns 400 EMAIL_REQUIRED. Upload / complete-upload don't need it (api-key).
+// Owner-scoped read/delete routes (files, stats, search). As of 2026-07-31 the
+// platform resolves the owner from the APIM-injected X-Kvidai-User-Email header,
+// so no email is needed. We still append ?email= when KVIDAI_USER_EMAIL is set —
+// harmless backward-compat fallback for older gateways. If unset, rely on the header.
 function withEmail(subPath) {
-  if (!USER_EMAIL) {
-    console.error('KVIDAI_USER_EMAIL is required for this command (owner-scoped).');
-    process.exit(1);
-  }
+  if (!USER_EMAIL) return subPath;
   const sep = subPath.includes('?') ? '&' : '?';
   return `${subPath}${sep}email=${encodeURIComponent(USER_EMAIL)}`;
 }
