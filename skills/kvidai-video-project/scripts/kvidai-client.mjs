@@ -84,6 +84,13 @@ export async function agentGenerate(projectId, message, onTool, options = {}) {
   });
   if (!r.ok || !r.body) throw new Error(`agentGenerate ${r.status}: ${await r.text()}`);
 
+  // #5: 실행 중 취소용 taskUid — 응답 헤더로 전달됨. 로그로 노출 + 콜백 전달.
+  const taskUid = r.headers.get('x-agent-task-uid') || null;
+  if (taskUid) {
+    log(`taskUid=${taskUid}  (취소: node kvidai-client.mjs cancel ${taskUid})`);
+    options.onTaskUid?.(taskUid);
+  }
+
   const tools = [];
   const reader = r.body.getReader();
   const dec = new TextDecoder();
@@ -111,6 +118,23 @@ export async function agentGenerate(projectId, message, onTool, options = {}) {
     }
   }
   return tools;
+}
+
+/**
+ * #5: 실행 중 agent 런 취소 — Strapi 동시성 슬롯 즉시 해제(429 해소) + 같은 워커면 compute 중단.
+ * taskUid 는 agentGenerate 의 로그/onTaskUid 콜백(응답 X-Agent-Task-Uid 헤더)에서 얻는다.
+ * @param {string} taskUid
+ */
+export async function cancelRun(taskUid) {
+  const r = await fetch(`${BASE_URL}/agent/${encodeURIComponent(taskUid)}/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': API_KEY },
+  });
+  const text = await r.text();
+  let body;
+  try { body = JSON.parse(text); } catch { body = text; }
+  if (!r.ok) throw new Error(`cancelRun ${r.status}: ${text}`);
+  return body;
 }
 
 // ── Async generation status ───────────────────────────────────────────────────
@@ -304,6 +328,18 @@ switch (cmd) {
     console.log(JSON.stringify(result, null, 2));
     break;
   }
+  case 'cancel': {
+    // usage: node kvidai-client.mjs cancel <taskUid>
+    // taskUid: agent-generate 로그의 taskUid= (응답 X-Agent-Task-Uid 헤더)
+    const taskUid = args[0];
+    if (!taskUid) {
+      console.error('Usage: node kvidai-client.mjs cancel <taskUid>');
+      process.exit(1);
+    }
+    const result = await cancelRun(taskUid);
+    console.log(JSON.stringify(result, null, 2));
+    break;
+  }
   case 'upload-assets': {
     // usage: node kvidai-client.mjs upload-assets <email> <file1> [file2] [file3]
     const [email, ...files] = args;
@@ -356,7 +392,7 @@ switch (cmd) {
     break;
   }
   default:
-    console.error('Usage: node kvidai-client.mjs create-project|get-project|agent-generate|poll-status|upload-assets|add-composition-asset|attach-media [args]');
+    console.error('Usage: node kvidai-client.mjs create-project|get-project|agent-generate|cancel|poll-status|upload-assets|add-composition-asset|attach-media [args]');
     console.error('  agent-generate <projectId> <message> [file1] [file2...]  — files sent as multipart alongside generate request');
     process.exit(1);
 }

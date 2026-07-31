@@ -35,6 +35,10 @@ KVIDAI_API_KEY=xxx node $SKILL agent-generate 260 "reference.jpg 이미지를 �
 # Poll async generation status
 KVIDAI_API_KEY=xxx node $SKILL poll-status <jobId>
 
+# Cancel a running agent run (releases the max-1 concurrency slot → clears 429 CONCURRENT_LIMIT)
+# taskUid is logged by agent-generate as "taskUid=..." (from the X-Agent-Task-Uid response header)
+KVIDAI_API_KEY=xxx node $SKILL cancel <taskUid>
+
 # --- Asset upload (with local files) ---
 
 # Upload files → prints JSON with id + CDN url per file

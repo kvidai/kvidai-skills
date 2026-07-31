@@ -144,8 +144,8 @@
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "3246f472f710fe1c5dbb74932720e65e7f558694731a68b5fdf0468b0864cbcc",
-          "bytes": 7866
+          "sha256": "68ec10b62d8a30b834db03bbd80fea717edb9157cf797adbc0d7e0ee405661d2",
+          "bytes": 8113
         },
         {
           "path": "scripts/examples/with-assets/assets/brief.md",
@@ -169,8 +169,8 @@
         },
         {
           "path": "scripts/kvidai-client.mjs",
-          "sha256": "a626f26247ce94c10e02b35c45cf241e3f3d2a88fa158e30f1fdf99ab82d0bc4",
-          "bytes": 15338
+          "sha256": "95911411604106e41bffe8f7af924b789f040483d66eff2e3217a8e11271da61",
+          "bytes": 16739
         }
       ]
     },
