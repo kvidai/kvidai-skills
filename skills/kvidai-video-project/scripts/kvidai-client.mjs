@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// kvidai API client — create project, agent-generate (SSE), poll status, get project.
+// kvidai API client — create project, agent-generate (SSE), poll status, get project, server video render.
 // Usage: node kvidai-client.mjs <command> [args...]
 
 const BASE_URL = process.env.KVIDAI_BASE_URL ?? 'https://api.kvid.ai';
@@ -127,6 +127,54 @@ export async function pollStatus(jobId, { intervalMs = 10_000, timeoutMs = 10 * 
     log(`[${Math.round((Date.now() - start) / 1000)}s] status=${status}`);
     if (/^(completed|done|success|finished)$/i.test(status)) return data;
     if (/^(failed|error)$/i.test(status)) throw new Error(`Generation failed: ${JSON.stringify(data)}`);
+    if (Date.now() - start > timeoutMs) throw new Error(`Timeout after ${timeoutMs / 1000}s`);
+    await new Promise((res) => setTimeout(res, intervalMs));
+  }
+}
+
+// ── Server video render (POST /video-render, GET /video-render/status) ──────────────────────────
+
+/**
+ * Start a server-side video render of a project. Returns immediately; poll with getVideoRenderStatus.
+ * Errors: 401 bad key, 402 insufficient credit, 409 already rendering, 404/400 unknown project / invalid body.
+ * @param {number} projectId
+ * @param {'h264'|'vp8'} [codec]  Omit to use the server default.
+ */
+export async function startVideoRender(projectId, codec) {
+  const body = { projectId };
+  if (codec) body.codec = codec;
+  const r = await fetch(`${BASE_URL}/video-render`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': API_KEY },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`startVideoRender ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+/**
+ * @param {number} projectId
+ * @returns {Promise<{projectId:number,status:'idle'|'rendering'|'completed'|'failed',progress?:number,renderUrl?:string,media?:{id:number,url:string},error?:string}>}
+ */
+export async function getVideoRenderStatus(projectId) {
+  const r = await fetch(`${BASE_URL}/video-render/status?projectId=${encodeURIComponent(projectId)}`, {
+    headers: { 'api-key': API_KEY },
+  });
+  if (!r.ok) throw new Error(`getVideoRenderStatus ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+/** Poll getVideoRenderStatus until completed (returns the status) or failed/timeout (throws). */
+export async function waitForVideoRender(
+  projectId,
+  { intervalMs = Number(process.env.KVIDAI_VIDEO_RENDER_POLL_INTERVAL_MS) || 5_000, timeoutMs = 15 * 60 * 1000 } = {},
+) {
+  const start = Date.now();
+  while (true) {
+    const data = await getVideoRenderStatus(projectId);
+    log(`[${Math.round((Date.now() - start) / 1000)}s] status=${data.status}${typeof data.progress === 'number' ? ` progress=${Math.round(data.progress * 100)}%` : ''}`);
+    if (data.status === 'completed') return data;
+    if (data.status === 'failed') throw new Error(`Video render failed: ${JSON.stringify(data)}`);
     if (Date.now() - start > timeoutMs) throw new Error(`Timeout after ${timeoutMs / 1000}s`);
     await new Promise((res) => setTimeout(res, intervalMs));
   }
@@ -285,6 +333,34 @@ switch (cmd) {
     console.log(JSON.stringify(result, null, 2));
     break;
   }
+  case 'video-render': {
+    // usage: node kvidai-client.mjs video-render <projectId> [--codec h264|vp8] [--wait]
+    const positional = [];
+    let codec;
+    let wait = false;
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--codec') codec = args[++i];
+      else if (args[i] === '--wait') wait = true;
+      else positional.push(args[i]);
+    }
+    if (!positional[0] || (codec && !['h264', 'vp8'].includes(codec))) {
+      console.error('Usage: node kvidai-client.mjs video-render <projectId> [--codec h264|vp8] [--wait]  (codec must be h264 or vp8)');
+      process.exit(1);
+    }
+    const started = await startVideoRender(Number(positional[0]), codec);
+    if (!wait) {
+      console.log(JSON.stringify(started, null, 2));
+      break;
+    }
+    log('Render started; waiting (max 15 min)...');
+    console.log(JSON.stringify(await waitForVideoRender(Number(positional[0])), null, 2));
+    break;
+  }
+  case 'video-render-status': {
+    const data = await getVideoRenderStatus(Number(args[0]));
+    console.log(JSON.stringify(data, null, 2));
+    break;
+  }
   case 'upload-assets': {
     // usage: node kvidai-client.mjs upload-assets <email> <file1> [file2] [file3]
     const [email, ...files] = args;
@@ -324,7 +400,7 @@ switch (cmd) {
     break;
   }
   default:
-    console.error('Usage: node kvidai-client.mjs create-project|get-project|agent-generate|poll-status|upload-assets|add-composition-asset|attach-media [args]');
+    console.error('Usage: node kvidai-client.mjs create-project|get-project|agent-generate|poll-status|video-render|video-render-status|upload-assets|add-composition-asset|attach-media [args]');
     console.error('  agent-generate <projectId> <message> [file1] [file2...]  — files sent as multipart alongside generate request');
     process.exit(1);
 }
