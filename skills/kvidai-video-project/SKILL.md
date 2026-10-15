@@ -36,10 +36,10 @@ KVIDAI_API_KEY=xxx node $SKILL agent-generate 260 "reference.jpg 이미지를 �
 KVIDAI_API_KEY=xxx node $SKILL poll-status <jobId>
 
 # Server video render of the project (returns immediately; charged by actual usage after completion)
-KVIDAI_API_KEY=xxx node $SKILL video-render 260 [--codec h264|vp8] [--wait]
+KVIDAI_API_KEY=xxx node $SKILL video-server-render 260 [--codec h264|vp8] [--wait]
 
-# Video render status: idle | rendering | completed | failed (+ progress, renderUrl, media)
-KVIDAI_API_KEY=xxx node $SKILL video-render-status 260
+# Video server render status: idle | rendering | completed | failed (+ progress, renderUrl, media)
+KVIDAI_API_KEY=xxx node $SKILL video-server-render-status 260
 
 # --- Asset upload (with local files) ---
 
@@ -59,16 +59,16 @@ KVIDAI_API_KEY=xxx node $SKILL add-composition-asset 260 user@example.com \
 2. agent-generate <id> "<message>"  → SSE stream → https://kvid.ai/en/editor/<id>
    (streams tool events: generate_voice → generate_image → update_item → add_solid → add_text)
 3. (optional async) poll-status <jobId>  → wait for completed
-4. (optional) video-render <id> [--wait]  → server video render → video-render-status <id> until completed
+4. (optional) video-server-render <id> [--wait]  → server video render → video-server-render-status <id> until completed
 ```
 
 ## Server video render
 
-`video-render <projectId>` starts a server-side video render of the project's current composition and returns at once. `--wait` polls every 5 s (max 15 min), prints progress on stderr and the final status JSON on stdout (exit 1 on failed/timeout). Without `--wait`, poll with `video-render-status <projectId>` until `status` is `completed`.
+`video-server-render <projectId>` starts a server-side video render of the project's current composition and returns at once. `--wait` polls every 5 s (max 15 min), prints progress on stderr and the final status JSON on stdout (exit 1 on failed/timeout). Without `--wait`, poll with `video-server-render-status <projectId>` until `status` is `completed`.
 
-- **Cost**: charged by actual usage after the video render completes, not up front. A video render is refused when the balance is too low.
-- **402** — insufficient credit: top up, then retry. **409** — a render is already running for this project: use `video-render-status` instead of starting another. **404/400** — unknown project (or not yours) / invalid body; **401** — bad `api-key`.
-- **Result**: the finished mp4 is copied into the user's normal media library (CDN URL) — list it with the existing media tooling, e.g. `GET {KVIDAI_BASE_URL}/media/files`) and attached to the project (visible in `get-project` media). `video-render-status` returns `media: { id, url }` and `renderUrl` (the CDN URL of the copied mp4, same as `media.url`) when completed.
+- **Cost**: charged by actual usage after the video server render completes, not up front. A video server render is refused when the balance is too low.
+- **402** — insufficient credit: top up, then retry. **409** — a render is already running for this project: use `video-server-render-status` instead of starting another. **404/400** — unknown project (or not yours) / invalid body; **401** — bad `api-key`.
+- **Result**: the finished mp4 is copied into the user's normal media library (CDN URL) — list it with the existing media tooling, e.g. `GET {KVIDAI_BASE_URL}/media/files`) and attached to the project (visible in `get-project` media). `video-server-render-status` returns `media: { id, url }` and `renderUrl` (the CDN URL of the copied mp4, same as `media.url`) when completed.
 
 ## Asset upload workflow (with local files)
 
@@ -163,16 +163,16 @@ api-key: {KVIDAI_API_KEY}
 **Start server video render**
 
 ```
-POST {KVIDAI_BASE_URL}/video-render
+POST {KVIDAI_BASE_URL}/video-server-render
 api-key: {KVIDAI_API_KEY}
 {"projectId": 260, "codec": "h264"}      ← codec optional: "h264" | "vp8"
 → 200 started (returns immediately) | 401 | 402 insufficient credit | 409 already rendering | 404/400
 ```
 
-**Video render status**
+**Video server render status**
 
 ```
-GET {KVIDAI_BASE_URL}/video-render/status?projectId=260
+GET {KVIDAI_BASE_URL}/video-server-render/status?projectId=260
 api-key: {KVIDAI_API_KEY}
 → { "projectId": 260, "status": "idle|rendering|completed|failed", "progress": 0.4,
     "renderUrl": "https://...", "media": { "id": 1, "url": "https://..." }, "error": "..." }
@@ -228,8 +228,8 @@ import {
   agentGenerate,
   pollStatus,
   getProject,
-  startVideoRender,
-  getVideoRenderStatus,
+  startVideoServerRender,
+  getVideoServerRenderStatus,
 } from '.claude/skills/kvidai-video-project/scripts/kvidai-client.mjs';
 ```
 
@@ -246,7 +246,7 @@ For marketing-studio: use `@marketing-studio/send-video-kvidai` (wraps the same 
 
 ## Tests
 
-`node --test .claude/skills/kvidai-video-project/scripts/kvidai-client.video-render.test.mjs` — spawns the CLI against a local stub server (no dependencies, no network).
+`node --test .claude/skills/kvidai-video-project/scripts/kvidai-client.video-server-render.test.mjs` — spawns the CLI against a local stub server (no dependencies, no network).
 
 ## Troubleshooting
 
