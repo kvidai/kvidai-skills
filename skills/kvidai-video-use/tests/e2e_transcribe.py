@@ -38,7 +38,7 @@ KVIDAI_API_KEY  = os.environ.get("KVIDAI_API_KEY",  "")
 
 # API 키 인증 STT 경로 테스트용 (opt-in).
 # 기본 경로: v1/speech-to-text-dev
-# prod 경로 테스트: KVIDAI_STT_PATH=/v1/speech-to-text
+# prod 경로 테스트: KVIDAI_STT_PATH=/ai/speech-to-text  (구 /v1/speech-to-text 는 deprecated alias — 계속 동작)
 # ⚠️ prod URL 사용 시 실제 과금 발생
 KVIDAI_STT_PATH = os.environ.get("KVIDAI_STT_PATH", "/v1/speech-to-text-dev")
 
@@ -328,7 +328,7 @@ def test_api_stt() -> None:
     """API 키 인증 STT 엔드포인트 직접 호출 (transcribe.py 의 실제 경로).
 
     KVIDAI_API_KEY 미설정 시 SKIP — 스위트 실패 아님.
-    ⚠️ prod 경로(/v1/speech-to-text) 사용 시 실제 과금 발생.
+    ⚠️ prod 경로(/ai/speech-to-text) 사용 시 실제 과금 발생.
     """
     print(f"\n[5] API 키 인증 STT — {KVIDAI_API_URL}{KVIDAI_STT_PATH} (opt-in)")
     if not VIDEO_PATH.exists():

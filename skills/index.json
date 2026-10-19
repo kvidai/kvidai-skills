@@ -1,0 +1,406 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "character-design",
+      "description": "Build consistent character designs and character media with kvidai. Use this for original characters, reference sheets, expression sheets, outfit variations, and character-to-video workflows.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "4b5fe6defa990fcfabb493966016c6f16f02b2cd81fea15d56cfa832def6ddbf",
+          "bytes": 4823
+        },
+        {
+          "path": "references/anchor-system.md",
+          "sha256": "c4a7e39ebf12937f642fafc8a59260f1620d9ddc5eb873c25c67b2e3cc5022ce",
+          "bytes": 1921
+        },
+        {
+          "path": "references/examples.md",
+          "sha256": "1980d83b82d2ee18417aa3d704a30c4ad17b17e93a3676ed0be1508e64dd849f",
+          "bytes": 2028
+        },
+        {
+          "path": "references/prompt-patterns.md",
+          "sha256": "256ba5364c0b9b52538774e1c307ec1e8dbeffcd5cd85950e2b3551bcac382bc",
+          "bytes": 1880
+        }
+      ]
+    },
+    {
+      "name": "cinematography",
+      "description": "Design cinematic image and video prompts for kvidai. Use this for shot language, camera movement, lighting, lens choices, color grade, film texture, scene blocking, and production-ready visual direction.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a706136c30bdacfec9c3d6cbfcb019604a32b1fd28f75d55d235a0467789d180",
+          "bytes": 3816
+        },
+        {
+          "path": "references/examples.md",
+          "sha256": "e143734e15f79411240056f22b9def4d8053b11cb54958213e68eec9899778c8",
+          "bytes": 1674
+        },
+        {
+          "path": "references/lighting-lens-color.md",
+          "sha256": "e9bbe4c61c98c0cf98cb652101b0e16f670184d7236e5509e9abc2e8de195f2a",
+          "bytes": 1995
+        },
+        {
+          "path": "references/shot-language.md",
+          "sha256": "21ca47d38ae6388293c410c4181fd2d84f8058fbcd36bf3db5d1643179e3faaf",
+          "bytes": 1901
+        }
+      ]
+    },
+    {
+      "name": "commercial",
+      "description": "Plan and run commercial image or video production with kvidai. Use this for product photography, ads, e-commerce batches, product reveals, lifestyle commercials, social formats, and brand-safe prompt work.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e5bd7063524cd81b27a81c7d05a9eb08bb26c2fc7911691ce5aa5e176083c88d",
+          "bytes": 4600
+        },
+        {
+          "path": "references/examples.md",
+          "sha256": "529a12813026c6f77c5171b99cfb966b57c81b36594626e8dd7a5eed81c7ba15",
+          "bytes": 1818
+        },
+        {
+          "path": "references/prompt-patterns.md",
+          "sha256": "491aaf66cac663b453d395b0a3c690f3da1a11a93292361b6589a6d6fec26be4",
+          "bytes": 2620
+        },
+        {
+          "path": "references/workflows.md",
+          "sha256": "8b2080d8328d21927831514f0cdfacad8bd3597e22fff8f51a5f80d6be006cd8",
+          "bytes": 2722
+        }
+      ]
+    },
+    {
+      "name": "kvidai",
+      "description": "Generate an image or video with the kvidai CLI, or manage a kvidai video project. Use this whenever the user asks to generate an image or video, edit an existing kvidai project via the AI agent, upload a file to kvid.ai, check an async job, or \"use kvidai\" for a task. Complete command reference — nothing else to load.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "0b5fd54ee23b7a896cd30e34fa473901765cc9e03d11367f0dcf6d1d8713e7c0",
+          "bytes": 8127
+        }
+      ]
+    },
+    {
+      "name": "kvidai-media",
+      "description": "Use when you need to upload a media file (image, video, audio, pdf, text) to kvidai CDN so that an agent / video-project can reference it by URL. Triggers on media upload, file upload, attach file, cdnUrl, presigned URL, 이미지 업로드, 영상 업로드, 첨부, 파일 업로드. Wraps api.kvid.ai/media — issues a presigned PUT URL, performs the PUT direct to DO Spaces, then returns the public cdnUrl. The cdnUrl can be passed to kvidai-video-project agent-generate as an attachedFile.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b25f5d7c27d3857d6290068824aabd04238dc3c44ded7aa8093f06ab381785ee",
+          "bytes": 4153
+        },
+        {
+          "path": "scripts/kvidai-media-client.mjs",
+          "sha256": "6b483d4f8d7d204c9fb3fe6c679009aaab63070b80f5056ef75e0e8f793226a2",
+          "bytes": 4957
+        }
+      ]
+    },
+    {
+      "name": "kvidai-preset",
+      "description": "Use when you need to call the kvidai Preset API (api.kvid.ai/preset) — list, get, create, update, delete, or duplicate the reusable presets that seed new video projects (voice, tone, color palette, scene defaults). Triggers on preset CRUD, presetId lookup, system_default fallback, default preset toggle, 프리셋 등록, 프리셋 조회, 프리셋 수정. Replaces the older video-template skill — Strapi has split video_template into video_preset (this) plus shared_composition (gallery).",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "396f75cee0c18a4143328a6b2d49401d2ad14153fa5605021f7ee0003cba13b6",
+          "bytes": 4490
+        },
+        {
+          "path": "scripts/kvidai-preset-client.mjs",
+          "sha256": "3847a2e39a2ea5dac8ed39e6f8f04a3d75053b5caf7f78c532864c475340c2bf",
+          "bytes": 3577
+        }
+      ]
+    },
+    {
+      "name": "kvidai-video-project",
+      "description": "\"Use when you need to call the kvidai API to create video projects, generate videos with AI auto-editing, or check generation status. Triggers on: create video project, generate video, auto-edit video, kvidai API, video-project CRUD, 영상 생성, 프로젝트 생성, 상태 조회, start video generation, poll job status. Use this skill whenever an agent (Claude Code, Codex CLI, Hermes) needs to interact with the kvidai video platform programmatically.\"",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "3246f472f710fe1c5dbb74932720e65e7f558694731a68b5fdf0468b0864cbcc",
+          "bytes": 7866
+        },
+        {
+          "path": "scripts/examples/with-assets/assets/brief.md",
+          "sha256": "d0047236f04525ec0cb87c6a34a866ec6ed16b8549df064235ed9c69d382ea18",
+          "bytes": 571
+        },
+        {
+          "path": "scripts/examples/with-assets/assets/broll.mp4",
+          "sha256": "6f29446e230456ad204890d1ac3b3e67f2232a195bde675445f3d1fa080be91f",
+          "bytes": 20
+        },
+        {
+          "path": "scripts/examples/with-assets/assets/reference.jpg",
+          "sha256": "ede1a880445ddadc2bee747d57ac16edea3b2a9c773b6b72e41cc3ff85c24a99",
+          "bytes": 215
+        },
+        {
+          "path": "scripts/examples/with-assets/run.mjs",
+          "sha256": "6d42326749e676c074e59aff002f294c24b0e65e130c32985c802b890a0e6d5d",
+          "bytes": 3430
+        },
+        {
+          "path": "scripts/kvidai-client.mjs",
+          "sha256": "080b572dead6fc7d76ae3ec761175a63374de855eb1283399d23a3ee2bf28b33",
+          "bytes": 13851
+        }
+      ]
+    },
+    {
+      "name": "kvidai-video-use",
+      "description": "Edit any video by conversation. Transcribe, cut, color grade, generate overlay animations, burn subtitles — for talking heads, montages, tutorials, travel, interviews. No presets, no menus. Ask questions, confirm the plan, execute, iterate, persist. Production-correctness rules are hard; everything else is artistic freedom.",
+      "files": [
+        {
+          "path": ".env.example",
+          "sha256": "a8e6b5a22441b0bf6821b63531f23107a47aae8fb2fa544ca48627ae3e005d76",
+          "bytes": 15
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "5afa3d97bf1e6f998d587fa101e3fe0d0c416840b7fe77bcd6ae97690a334631",
+          "bytes": 1068
+        },
+        {
+          "path": "README.md",
+          "sha256": "5dcae0995f8066ebe1f793c4bed8d5d8527759215b814c416bbe428eb13c2138",
+          "bytes": 5459
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "0cd47c652ba8b50d5c51a36306a54bdf456d790bd4aa14c615269a48fd077b55",
+          "bytes": 29849
+        },
+        {
+          "path": "helpers/grade.py",
+          "sha256": "f5df58e81f31c95a621ffba5973fd866f6662fc481a36ebd37a2e68eb81220c2",
+          "bytes": 13244
+        },
+        {
+          "path": "helpers/pack_transcripts.py",
+          "sha256": "f9e419def5f0a014d5e1fd16fdad801013ae068854c1d474c3492297e2304f4b",
+          "bytes": 7207
+        },
+        {
+          "path": "helpers/render.py",
+          "sha256": "bef2d6b47659c1d734b47556403276d05f0585e72d4b2d1da159c22b4cad69ed",
+          "bytes": 23307
+        },
+        {
+          "path": "helpers/timeline_view.py",
+          "sha256": "69aee88e4204f86127740cca9de6a6eaa75a558df1bb07745dd62f69a3c2e9cf",
+          "bytes": 13748
+        },
+        {
+          "path": "helpers/transcribe.py",
+          "sha256": "46e7ea1d0f44a4c176f520078a22f51e1ca947d9337e9557471aba4a2199a5e2",
+          "bytes": 7035
+        },
+        {
+          "path": "helpers/transcribe_batch.py",
+          "sha256": "417d531c23d04d570e017ec8f83ed9de41a6902d34c9e6302d7f1b6f5c1b8740",
+          "bytes": 3694
+        },
+        {
+          "path": "helpers/transcribe_local.py",
+          "sha256": "10049ada3989a77c11b3838a3ddad196941b253623f18c32086bf569f06f8ee7",
+          "bytes": 11698
+        },
+        {
+          "path": "install.md",
+          "sha256": "c7b2e54b307661844cac51d7899f1bbf40693c5294bd8e57a549f5e4bf6331b8",
+          "bytes": 6594
+        },
+        {
+          "path": "poster.html",
+          "sha256": "9fdded774997b1a502084be4a31ed62d56ad5f0249c939bf6a030da30ac56656",
+          "bytes": 19975
+        },
+        {
+          "path": "pyproject.toml",
+          "sha256": "4b27fdf0275016a5427416ee9a939ed5c8a756af02427394478d416b0909632d",
+          "bytes": 450
+        },
+        {
+          "path": "skills/manim-video/README.md",
+          "sha256": "a30f3ec6105d5b23bc5ec28e8e2809e9ceed49f1fd816570d5b5656d0aa65819",
+          "bytes": 886
+        },
+        {
+          "path": "skills/manim-video/SKILL.md",
+          "sha256": "478ff04a7e3ecf9157b14fc2c24b4ae3fef7460debf27c4ecbe361bf26b0ac29",
+          "bytes": 11983
+        },
+        {
+          "path": "skills/manim-video/references/animation-design-thinking.md",
+          "sha256": "87812340f4756f5e2cc653e6e13ec922562a58483bcd66a5317c19ace5e08220",
+          "bytes": 7205
+        },
+        {
+          "path": "skills/manim-video/references/animations.md",
+          "sha256": "e00bf77a8e17bf457b7669175ac5dc9ffa68e93d35b3f092036a6077892ba51d",
+          "bytes": 8836
+        },
+        {
+          "path": "skills/manim-video/references/camera-and-3d.md",
+          "sha256": "36a17d79a0d7b9b11b8e645417f10ebcd2e051228c06867611a3271db7f28ad4",
+          "bytes": 4132
+        },
+        {
+          "path": "skills/manim-video/references/decorations.md",
+          "sha256": "dfd7bd79a57a0b1860aae5a5d6d282b1b517445457db4d4493519d77c0f568de",
+          "bytes": 5006
+        },
+        {
+          "path": "skills/manim-video/references/equations.md",
+          "sha256": "7408d2688b497f423770e33408d883d54e293a1ba3abb892ebb799a698b50e38",
+          "bytes": 6086
+        },
+        {
+          "path": "skills/manim-video/references/graphs-and-data.md",
+          "sha256": "347847bc60f1e5f00ab8ad0f81deede00e8c702b3e1d13a22358e358f370be12",
+          "bytes": 4628
+        },
+        {
+          "path": "skills/manim-video/references/mobjects.md",
+          "sha256": "771421e463b526dcc4e2593ae327358ef26919f698c48ee4e32cc7749d32dcda",
+          "bytes": 9739
+        },
+        {
+          "path": "skills/manim-video/references/paper-explainer.md",
+          "sha256": "ab67495a01e60f2c45afded7c3c80a4e4501c841a562d1a6d305cc74787a4fc4",
+          "bytes": 9333
+        },
+        {
+          "path": "skills/manim-video/references/production-quality.md",
+          "sha256": "d9f41d3c58396a94750e6d7c56c9fe5aaa0d067679df059adbe472ceab87d9c0",
+          "bytes": 5904
+        },
+        {
+          "path": "skills/manim-video/references/rendering.md",
+          "sha256": "8a326d4081d658018fccb8ee4df34be6a945b40466f08f4675924f98649c6ac2",
+          "bytes": 5375
+        },
+        {
+          "path": "skills/manim-video/references/scene-planning.md",
+          "sha256": "c54a8cf6cf864ff5a60d4569e4e285f0fca88e40f3cbff1350b70b099af319e0",
+          "bytes": 2751
+        },
+        {
+          "path": "skills/manim-video/references/troubleshooting.md",
+          "sha256": "7ee9880cf32ab2b4e1eeaa289464f211e96e9510004635ade59ee6660a4909df",
+          "bytes": 4319
+        },
+        {
+          "path": "skills/manim-video/references/updaters-and-trackers.md",
+          "sha256": "96c024dce576750a917277e0f4e09135fa7be25ea7e9248b702d36533b22dae5",
+          "bytes": 8500
+        },
+        {
+          "path": "skills/manim-video/references/visual-design.md",
+          "sha256": "6703a312d9e35820a84140343b5c484050874ff19daf5c72789fa00cc1644c99",
+          "bytes": 4762
+        },
+        {
+          "path": "skills/manim-video/scripts/setup.sh",
+          "sha256": "e7563c458764c1b369c26f874cf94acbe43db8f9a3b1e0d9d735230f5d895bae",
+          "bytes": 921
+        },
+        {
+          "path": "static/timeline-view.svg",
+          "sha256": "edfbf16f698028ef60ecb29225365e73bb1d55c2c9a49fe17aead275e69722d8",
+          "bytes": 12329
+        },
+        {
+          "path": "static/video-use-banner.png",
+          "sha256": "a22497efc42640c79b921030e430d61f8f4a6005d83475cadeeb877320a76eb7",
+          "bytes": 511869
+        },
+        {
+          "path": "tests/e2e_transcribe.py",
+          "sha256": "eb17ac17d62cda7006e60362fd1bcb3f052365f49cb21705e4e7682f4e081670",
+          "bytes": 16921
+        }
+      ]
+    },
+    {
+      "name": "model-routing",
+      "description": "Explains kvidai's --model handling for image/video generation. Use this with commercial, character-design, cinematography, storytelling, and workflow when deciding whether to pass --model.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "5396490d4cdc834c9f0f1d525c7854d0b698d189498198814b6fe197cec06e54",
+          "bytes": 2099
+        }
+      ]
+    },
+    {
+      "name": "storytelling",
+      "description": "Build multi-shot narrative image and video sequences with kvidai. Use this for storyboards, shot lists, social stories, brand films, and sequence continuity.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a79db6fe8ab9083b747f17784b8eafcc0695e41b8f20e83b60c8fbc008c069d7",
+          "bytes": 3747
+        },
+        {
+          "path": "references/examples.md",
+          "sha256": "5c3c2a2b4750d7984e9e5ec09d25efbc075023187fdea48aaa95e90a78c48f86",
+          "bytes": 2842
+        },
+        {
+          "path": "references/shot-planning.md",
+          "sha256": "8ceccbda8fdeab87f1c4c5f1303562d3d37eca8f461e219e3650e22eb280ba4c",
+          "bytes": 1883
+        },
+        {
+          "path": "references/workflows.md",
+          "sha256": "6e778600c166121deca48d31d55db5a6ef4daa6dfa7b4a795884496fb394533c",
+          "bytes": 1859
+        }
+      ]
+    },
+    {
+      "name": "workflow",
+      "description": "Plan and execute a sequence of independent kvidai generation calls for a multi-asset deliverable (batches, variant sets, campaigns). Use this when a single image/video call is not enough.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a6e656a2267455ff1d7473e74c786edad6ec46d5d9789a6cdb55c46f8827c591",
+          "bytes": 4521
+        },
+        {
+          "path": "references/node-rules.md",
+          "sha256": "de7f5ae1cdd3f62ca166c9904c80a78bb425f490e4c23a620a7b931e79fece8f",
+          "bytes": 2611
+        },
+        {
+          "path": "references/pipeline-patterns.md",
+          "sha256": "39278df44102d6dba9920e275420ce979be19c7d5662d3adade48f70cbb699a1",
+          "bytes": 2287
+        },
+        {
+          "path": "references/recipes.md",
+          "sha256": "9277df6d12c838ca0db443c9b0aef1ae30a3a269b0979139f8a173a0911a757d",
+          "bytes": 3208
+        },
+        {
+          "path": "references/utility-endpoints.md",
+          "sha256": "50046df4af5bcecb26090cb4cdb0e7a2fd9d27fc129fa7d2a9add87d36be8353",
+          "bytes": 875
+        }
+      ]
+    }
+  ]
+}
