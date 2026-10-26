@@ -30,7 +30,8 @@ kvidai setup --non-interactive --api-key <key> --json    # agents/CI
 kvidai setup                                              # interactive wizard
 ```
 
-`KVIDAI_USER_EMAIL` is also required for `video t2v` and `assets upload`.
+`KVIDAI_USER_EMAIL` is also required for the standalone async video jobs
+(`video t2v`/`i2v`/`ref2vid`/`v2v`/`talk-v2v`) and `assets upload`.
 
 ## Steps
 
@@ -90,6 +91,10 @@ one-off `video t2v` call.
 ```
 kvidai video generate <projectId> <message> [--cdn-url <url>] [--mime <type>] [--filename <name>] [--verbose] [--json]
 kvidai video t2v <prompt> [--model <id>] [--duration <s>] [--wait] [--output <path>] [--interval <ms>] [--timeout <ms>] [--json]
+kvidai video i2v <prompt> --image <cdnUrl> [--model <id>] [--negative-prompt <s>] [--wait] [--output <path>] [--json]
+kvidai video ref2vid <prompt> --image <cdnUrl> | --images '<json[]>' [--video <cdnUrl>] [--model <id>] [--wait] [--output <path>] [--json]
+kvidai video v2v <prompt> --video <cdnUrl> [--model <falId>] [--duration <s|auto>] [--resolution <480p|720p|1080p>] [--aspect-ratio <r>] [--wait] [--output <path>] [--json]
+kvidai video talk-v2v [prompt] --audio <cdnUrl> (--image <cdnUrl> | --video <cdnUrl>) [--model <falId>] [--wait] [--output <path>] [--json]
 ```
 
 `generate` streams an AI agent editing an **existing** project over SSE and
@@ -98,10 +103,20 @@ media file). Use `--cdn-url` to attach a file (from `upload`/`assets upload`)
 as context for the agent's instruction. `--verbose` prints tool-call names
 to stderr as they happen.
 
-`t2v` is a standalone async text-to-video job — no project required.
-Without `--wait`/`--output` it returns immediately with `{ jobId, ... }`;
-poll it with `task status`. With `--wait` or `--output` it polls internally
-and returns the finished result (or downloads it, respectively).
+The rest (`t2v`/`i2v`/`ref2vid`/`v2v`/`talk-v2v`) are standalone async video
+jobs — no project required. Without `--wait`/`--output` each returns
+`{ jobId, ... }`; poll it with `task status`. With `--wait` or `--output` it
+polls internally and returns the finished result (or downloads it).
+
+- `t2v` — text → video.
+- `i2v` — animate an existing image (`--image`) into video.
+- `ref2vid` — reference-guided: generate from reference image(s)/video (`--image`/`--images`/`--video`).
+- `v2v` — transform an input video (`--video`) in a new style/scene. `--model` is a fal id
+  (default `alibaba/wan-3.0/reference-to-video`; also `fal-ai/kling-video/o3/pro/video-to-video/reference`,
+  `bytedance/seedance-2.5/reference-to-video`).
+- `talk-v2v` — lip-sync: make a face speak the given `--audio`. Image mode (`--image` face photo,
+  `--model` = `fal-ai/kling-video/ai-avatar/v2/standard`|`.../v2/pro`|`fal-ai/bytedance/omnihuman`) or
+  video mode (`--video` existing clip). `--audio` is required.
 
 ### image — generate images
 
