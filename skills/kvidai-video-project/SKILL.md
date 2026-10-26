@@ -154,7 +154,40 @@ api-key: {KVIDAI_API_KEY}
 → {"jobId": "..."}
 ```
 
-**Poll status**
+**Async i2v / ref2vid** (image → video / reference-guided)
+
+```
+POST {KVIDAI_BASE_URL}/ai/generation/image-to-video/generate-async
+{"email":"...","prompt":"...","image_url":"https://cdn/img.jpg","function":"img2vid","resolution":"720p"}
+
+POST {KVIDAI_BASE_URL}/ai/generation/reference-to-video/generate-async
+{"email":"...","prompt":"...","image_urls":["https://cdn/ref.png"],"video_urls":[],"audio_urls":[],"function":"ref2vid"}
+```
+
+**Async v2v** (video → video: transform one input clip)
+
+```
+POST {KVIDAI_BASE_URL}/ai/generation/video-to-video/generate-async
+api-key: {KVIDAI_API_KEY}
+{"email":"...","prompt":"restyle into anime","input_video_url":"https://cdn/clip.mp4","model":"alibaba/wan-3.0/reference-to-video","resolution":"720p","duration":5}
+→ {"jobId": "..."}
+```
+`model` is REQUIRED (fal id): `alibaba/wan-3.0/reference-to-video` | `fal-ai/kling-video/o3/pro/video-to-video/reference` | `bytedance/seedance-2.5/reference-to-video`. `duration` = 4-30 or `"auto"` (seedance 2.5).
+
+**Async talk-v2v** (lip-sync: make a face speak an audio)
+
+```
+POST {KVIDAI_BASE_URL}/ai/generation/talk-v2v/generate-async
+api-key: {KVIDAI_API_KEY}
+# Image mode (face photo + audio):
+{"email":"...","image_url":"https://cdn/face.png","audio_file":"https://cdn/voice.mp3","model":"fal-ai/kling-video/ai-avatar/v2/standard","function":"talk_i2v","resolution":"720p"}
+# Video mode (existing clip + audio):
+{"email":"...","input_video":"https://cdn/talking.mp4","audio_file":"https://cdn/voice.mp3","model":"talk","function":"talk_v2v","resolution":"720p"}
+→ {"jobId": "..."}
+```
+`audio_file` is REQUIRED (the voice to lip-sync to). Image mode → `fal-ai/kling-video/ai-avatar/v2/standard`|`.../v2/pro`|`fal-ai/bytedance/omnihuman`. Video mode → `model:"talk"`.
+
+**Poll status** (all video kinds share this)
 
 ```
 GET {KVIDAI_BASE_URL}/ai/generation/status?jobId={jobId}
