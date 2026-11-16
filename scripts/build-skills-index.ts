@@ -11,7 +11,7 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 
 const SKILLS_DIR = "skills";
 const INDEX_FILE = join(SKILLS_DIR, "index.json");
@@ -48,7 +48,7 @@ function walkFiles(dir: string, base = dir): string[] {
     if (stat.isDirectory()) {
       out.push(...walkFiles(full, base));
     } else if (stat.isFile()) {
-      out.push(relative(base, full));
+      out.push(relative(base, full).split(sep).join("/"));
     }
   }
   return out.sort();

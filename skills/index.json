@@ -112,13 +112,13 @@
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "702c6da594c7cd8b93c429c3a990def2891466a4368801ed13ca30e494155f4f",
-          "bytes": 5071
+          "sha256": "95d395686ccbfc08ba2e8d53b8be9fd779927370b60f5d8023bbad73c7b53b7b",
+          "bytes": 5454
         },
         {
           "path": "scripts/kvidai-media-client.mjs",
-          "sha256": "c1347a076827ed668b6f9b0a3013c03e6ccb0ef15c003d3df0690f24df0bb4c5",
-          "bytes": 6369
+          "sha256": "4a736e3cfbef9dfad1f50b4a09bc4eabe096556e61dee7992aac2bf063bc0ea7",
+          "bytes": 6981
         }
       ]
     },
@@ -384,6 +384,27 @@
           "path": "references/workflows.md",
           "sha256": "6e778600c166121deca48d31d55db5a6ef4daa6dfa7b4a795884496fb394533c",
           "bytes": 1859
+        }
+      ]
+    },
+    {
+      "name": "video-frame-analysis",
+      "description": "Extract ordered video frames and contact sheets for visual reference analysis, motion study, scene inspection, or dense sampling of a local video.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a6b27e618bb90aa59592285e77879bf6e7c2df521c14aada301852a35a98ed6a",
+          "bytes": 2103
+        },
+        {
+          "path": "references/usage.md",
+          "sha256": "1ae501ebf0238d7d215f332c7112fc20dea3f3f310c4bc321d82a12dc268cf13",
+          "bytes": 6296
+        },
+        {
+          "path": "scripts/extract_frames.py",
+          "sha256": "705bdfe6b3ade1e9dcc3d084204dd56e124e2bb3516b9309b3054a26128b3dea",
+          "bytes": 16001
         }
       ]
     },

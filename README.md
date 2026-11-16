@@ -14,6 +14,14 @@ This is the single skill registry for kvidai. Some skills call `api.kvid.ai` dir
 | [`kvidai-ai`](skills/kvidai-ai/) | Generation endpoints not in the CLI: voice (TTS), speech-to-text, ai-edit |
 | [`kvidai-video-use`](skills/kvidai-video-use/) | Conversation-driven video editor: transcribe, cut, grade, subtitle, composite |
 
+## Skills — local analysis
+
+Requires Python 3.10+, Pillow, FFmpeg/ffprobe; no API key:
+
+| Skill | Description |
+|-------|-------------|
+| [`video-frame-analysis`](skills/video-frame-analysis/) | Extract motion, scene or dense frame samples with timestamps and contact sheets on Windows/Linux |
+
 ## Skills — require the kvidai CLI installed locally
 
 | Skill | Description |

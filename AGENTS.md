@@ -53,6 +53,8 @@ CLI-dependent skills (bottom 7 above) were merged in from the `kvidai-cli` repo 
 3. Update `README.md` with the new skill entry
 4. In kvidai monorepo, add symlink: `ln -s ../../skills/kvidai-skills/skills/<skill-name> .claude/skills/<skill-name>`
 
+`skills/video-frame-analysis/` is a local utility (Python 3.10+, Pillow, FFmpeg/ffprobe). It requires no kvidai API/CLI. Run `scripts/extract_frames.py --check` inside that skill to diagnose dependencies; run its tests from the repository root with `python -m unittest discover -s tests/video-frame-analysis -v`. Its implementation uses presentation timestamps and pixel-change heuristics; see the skill's usage reference for modes and output conventions.
+
 ## Updating an Existing Skill
 
 Work inside the submodule directory, then commit and push here.
