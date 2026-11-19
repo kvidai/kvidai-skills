@@ -85,8 +85,8 @@
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "0b5fd54ee23b7a896cd30e34fa473901765cc9e03d11367f0dcf6d1d8713e7c0",
-          "bytes": 8127
+          "sha256": "42920475d9bc9045f27de7420a208c2cf045463f6c4af045b9fdf11cf2cc8dad",
+          "bytes": 9484
         }
       ]
     },
@@ -128,8 +128,8 @@
       "files": [
         {
           "path": "SKILL.md",
-          "sha256": "3246f472f710fe1c5dbb74932720e65e7f558694731a68b5fdf0468b0864cbcc",
-          "bytes": 7866
+          "sha256": "8fc969851dc4bbf729151783b61ee7aa1ed8a1ba93715fd3b7dc924230fddfcf",
+          "bytes": 9659
         },
         {
           "path": "scripts/examples/with-assets/assets/brief.md",
