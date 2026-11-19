@@ -14,7 +14,7 @@ E2E test — transcribe 기능 (STT + agent subtitle flow)
   TEST_USER_EMAIL  : 테스트 유저 이메일   (기본값: user@example.com)
   KVIDAI_API_KEY   : API 키               (필수 — .env 파일에서 설정)
   VIDEO_PATH       : 테스트할 영상 경로   (필수)
-  KVIDAI_STT_PATH  : STT API 경로         (기본값: /v1/speech-to-text-dev)
+  KVIDAI_STT_PATH  : STT API 경로         (선택 — 미설정이면 [5] 를 건너뜀. 예: /ai/speech-to-text, 과금됨)
 """
 
 from __future__ import annotations
@@ -37,10 +37,10 @@ TEST_USER_EMAIL = os.environ.get("TEST_USER_EMAIL",  "user@example.com")
 KVIDAI_API_KEY  = os.environ.get("KVIDAI_API_KEY",  "")
 
 # API 키 인증 STT 경로 테스트용 (opt-in).
-# 기본 경로: v1/speech-to-text-dev
+# 기본 경로 없음: KVIDAI_STT_PATH 를 명시한 경우에만 실행 (미설정이면 SKIP)
 # prod 경로 테스트: KVIDAI_STT_PATH=/ai/speech-to-text  (구 /v1/speech-to-text 는 deprecated alias — 계속 동작)
 # ⚠️ prod URL 사용 시 실제 과금 발생
-KVIDAI_STT_PATH = os.environ.get("KVIDAI_STT_PATH", "/v1/speech-to-text-dev")
+KVIDAI_STT_PATH = os.environ.get("KVIDAI_STT_PATH", "")
 
 VIDEO_PATH = Path(os.environ.get("VIDEO_PATH", ""))
 
@@ -331,6 +331,9 @@ def test_api_stt() -> None:
     ⚠️ prod 경로(/ai/speech-to-text) 사용 시 실제 과금 발생.
     """
     print(f"\n[5] API 키 인증 STT — {KVIDAI_API_URL}{KVIDAI_STT_PATH} (opt-in)")
+    if not KVIDAI_STT_PATH:
+        skip("API STT", "KVIDAI_STT_PATH not set (opt-in; /ai/speech-to-text 는 과금됨)")
+        return
     if not VIDEO_PATH.exists():
         skip("API STT", f"video not found: {VIDEO_PATH}")
         return
