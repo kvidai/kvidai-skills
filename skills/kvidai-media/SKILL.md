@@ -24,7 +24,7 @@ All paths below are relative to the **kvidai monorepo root**.
 
 ```bash
 export KVIDAI_API_KEY="<prod-media-apim-key>"            # APIM subscription key, scope = media product
-export KVIDAI_BASE_URL="https://api.kvid.ai"             # default if not set; staging: https://staging-api.kvid.ai
+export KVIDAI_BASE_URL="https://api.kvid.ai"             # default if not set
 ```
 
 The API auto-scopes uploads to the subscription owner — no need to pass an email in the body.

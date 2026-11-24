@@ -27,7 +27,7 @@ All paths below are relative to the **kvidai monorepo root**.
 
 ```bash
 export KVIDAI_API_KEY="<prod-preset-apim-key>"          # APIM subscription key, scope = preset product
-export KVIDAI_BASE_URL="https://api.kvid.ai"            # default if not set; use https://staging-api.kvid.ai for staging
+export KVIDAI_BASE_URL="https://api.kvid.ai"            # default if not set
 export KVIDAI_USER_EMAIL="user@example.com"             # required for some operations; scoped automatically from the APIM subscription key
 ```
 
